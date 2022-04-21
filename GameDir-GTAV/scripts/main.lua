@@ -21,16 +21,20 @@ do
 		end
 	end
 	JM36.Wait, JM36.wait, JM36.yield = Halt, Halt, Halt
-	wait = Halt
 end
 local Threads = {}
 do
-	local table_insert = table.insert
-	local Info = Info
-	local create = coroutine.create
-	JM36.CreateThread = function(func, ...)
-		table_insert(Threads, create(func, Info, ...))
+	local CreateThread
+	do
+		local table_insert = table.insert
+		local Info = Info
+		local create = coroutine.create
+		CreateThread = function(func, ...)
+			table_insert(Threads, create(func, Info, ...))
+		end
 	end
+	JM36.CreateThread = CreateThread
+	CreateThread(function() wait=JM36.wait end)
 end
 local Scripts_Init, Scripts_Stop
 do
@@ -82,8 +86,7 @@ do
 									if type(Script)=='table' then
 										Self[#Self+1] = Script.init
 										
-										Scripts_Stop[#Scripts_Stop+1]=Script.stop
-										Scripts_Stop[#Scripts_Stop+1]=Script.unload --Support older/existing LuaPlugin format scripts
+										Scripts_Stop[#Scripts_Stop+1] = (Script.stop or Script.unload)
 										
 										local loop = (Script.loop or Script.tick)
 										if loop then
