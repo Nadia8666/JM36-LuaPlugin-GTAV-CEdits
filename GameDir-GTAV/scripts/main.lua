@@ -27,10 +27,9 @@ do
 	local CreateThread
 	do
 		local table_insert = table.insert
-		local Info = Info
 		local create = coroutine.create
-		CreateThread = function(func, ...)
-			table_insert(Threads, create(func, Info, ...))
+		CreateThread = function(func)
+			table_insert(Threads, create(func))
 		end
 	end
 	JM36.CreateThread = CreateThread
@@ -44,7 +43,7 @@ do
 		local CreateThread = JM36.CreateThread
 		local yield = JM36.yield
 		loopToThread = function(func)
-			CreateThread(function(--[[Info]])
+			CreateThread(function()
 				local Info = Info
 				local func = func
 				local yield = yield
