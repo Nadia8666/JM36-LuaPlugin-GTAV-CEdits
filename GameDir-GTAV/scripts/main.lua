@@ -105,7 +105,6 @@ do
 					end
 	})
 end
-Scripts_Loop = {} -- Merge with tick using metatables?
 do
 	Scripts_Stop = setmetatable({},{
 		__call  =   function(Self)
