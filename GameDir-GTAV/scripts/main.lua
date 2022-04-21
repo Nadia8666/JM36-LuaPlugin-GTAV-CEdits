@@ -5,9 +5,51 @@ Scripts_Path	= "scripts\\ScriptsDir-Lua\\" or "C:\\Path\\To\\ScriptsDir-Lua\\"
 
 
 --[[ Script/Code Area ]]
-Info = { Enabled=false, Time=0, Player=0 } local Info = Info
-local Scripts_Init, Scripts_Loop, Scripts_Stop
+local coroutine = coroutine
+Info = {Enabled=false,Time=0,Player=0} local Info = Info
+JM36 = {CreateThread=0,Wait=0,wait=0,yield=0} local JM36 = JM36
 do
+	local Halt
+	do
+		local Info = Info
+		local yield = coroutine.yield
+		Halt = function(ms)
+			local TimeResume = Info.Time+(ms or 0)
+			repeat
+				yield()
+			until Info.Time > TimeResume
+		end
+	end
+	JM36.Wait, JM36.wait, JM36.yield = Halt, Halt, Halt
+	wait = Halt
+end
+local Threads = {}
+do
+	local table_insert = table.insert
+	local Info = Info
+	local create = coroutine.create
+	JM36.CreateThread = function(func, ...)
+		table_insert(Threads, create(func, Info, ...))
+	end
+end
+local Scripts_Init, Scripts_Stop
+do
+	local loopToThread
+	do
+		local JM36 = JM36
+		local CreateThread = JM36.CreateThread
+		local yield = JM36.yield
+		loopToThread = function(func)
+			CreateThread(function(Info)
+				local func = func
+				local yield = yield
+				while true do
+					func(Info)
+					yield()
+				end
+			end, Info)
+		end
+	end
 	Scripts_Init = setmetatable({},{
 		__call	=	function(Self)
 						if Info.Enabled then Scripts_Stop() end
@@ -29,8 +71,8 @@ do
 						Self.List = Scripts_List
 						
 						do
-							local Scripts_Loop, Scripts_Stop
-								= Scripts_Loop, Scripts_Stop
+							local Scripts_Stop
+								= Scripts_Stop
 							local print, type, pcall, require
 								= print, type, pcall, require
 							for i=1, Scripts_NMBR do
@@ -38,11 +80,14 @@ do
 								if Successful then
 									if type(Script)=='table' then
 										Self[#Self+1] = Script.init
-										Scripts_Loop[#Scripts_Loop+1]=Script.loop
+										
 										Scripts_Stop[#Scripts_Stop+1]=Script.stop
-										--Support older/existing LuaPlugin format scripts
-										Scripts_Stop[#Scripts_Stop+1]=script.unload
-										Scripts_Loop[#Scripts_Loop+1]=script.tick
+										Scripts_Stop[#Scripts_Stop+1]=Script.unload --Support older/existing LuaPlugin format scripts
+										
+										local loop = (Script.loop or Script.tick)
+										if loop then
+											loopToThread(loop)
+										end
 									end
 								else
 									print(Script)
@@ -81,8 +126,8 @@ do
 							end
 						end
 						
-						for i=1, #Scripts_Loop do
-							Scripts_Loop[i]=nil
+						for i=1, #Threads do
+							Threads[i]=nil
 						end
 						
 						do
@@ -109,13 +154,40 @@ do
 		end
 	end
 	do
+		local resume = coroutine.resume
+		local CR = coroutine.create(function()
+			local print = print
+			local yield = JM36.yield
+			local resume = resume
+			local status = coroutine.status
+			local Threads = Threads
+			while true do
+				local j, n = 1, #Threads
+				for i=1,n do
+					local Thread = Threads[i]
+					if status(Thread)~="dead" then
+						do
+							local Successful, Error = resume(Thread)
+							if not Successful then print(Error) end
+						end
+						if i ~= j then
+							Threads[j] = Threads[i]
+							Threads[i] = nil
+						end
+						j = j + 1
+					else
+						Threads[i] = nil
+					end
+				end
+				yield()
+			end
+		end)
+		
 		local Info_Update_Delay = Info_Update_Delay or 0
 		local UpdateInfoTime = 0
-		local Scripts_Loop = Scripts_Loop
 		local Info = Info
-		if DebugMode then
-			local print, pcall = print, pcall
-			tick = function()
+		tick = function()
+			if Info.Enabled then
 				local Time = GetTime()
 				Info.Time = Time
 				if Time >= UpdateInfoTime then
@@ -125,28 +197,7 @@ do
 					end
 					UpdateInfoTime = Time + Info_Update_Delay
 				end
-				for i=1, #Scripts_Loop do
-					if not Info.Enabled and i~=1 then break end
-					--if not Info.Enabled then break end
-					local Successful, Error = pcall(Scripts_Loop[i], Info) if not Successful then print(Error) end
-				end
-			end
-		else
-			tick = function()
-				if Info.Enabled then
-					local Time = GetTime()
-					Info.Time = Time
-					if Time >= UpdateInfoTime then
-						local Functions = Info.Functions
-						for i=1, #Functions do
-							Functions[i](Info)
-						end
-						UpdateInfoTime = Time + Info_Update_Delay
-					end
-					for i=1, #Scripts_Loop do
-						Scripts_Loop[i](Info)
-					end
-				end
+				resume(CR)
 			end
 		end
 	end
@@ -185,7 +236,7 @@ do
 	local setmetatable = setmetatable
 	local _G2
 	do
-		_G2 = { _G2=0,JM36_GTAV_LuaPlugin_Version=20220412.0 }
+		_G2 = { _G2=0,JM36_GTAV_LuaPlugin_Version=20220420.0 }
 		_G2._G2=_G2
 		setmetatable(_G,{__index=_G2})
 	end
@@ -403,8 +454,6 @@ do
 		table.sort(__libs_List)
 		
 		do
-			local Scripts_Loop, Scripts_Stop
-				= Scripts_Loop, Scripts_Stop
 			local print, pcall, require
 				= print, pcall, require
 			for i=1, __libs_NMBR do
