@@ -239,7 +239,7 @@ do
 	local setmetatable = setmetatable
 	local _G2
 	do
-		_G2 = { _G2=0,JM36_GTAV_LuaPlugin_Version=20220420.0 }
+		_G2 = { _G2=0,JM36_GTAV_LuaPlugin_Version=20220422.0 }
 		_G2._G2=_G2
 		setmetatable(_G,{__index=_G2})
 	end
