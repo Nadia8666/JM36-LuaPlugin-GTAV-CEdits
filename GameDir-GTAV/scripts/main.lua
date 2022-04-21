@@ -40,14 +40,15 @@ do
 		local CreateThread = JM36.CreateThread
 		local yield = JM36.yield
 		loopToThread = function(func)
-			CreateThread(function(Info)
+			CreateThread(function(--[[Info]])
+				local Info = Info
 				local func = func
 				local yield = yield
 				while true do
 					func(Info)
 					yield()
 				end
-			end, Info)
+			end)
 		end
 	end
 	Scripts_Init = setmetatable({},{
