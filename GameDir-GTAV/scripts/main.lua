@@ -22,19 +22,24 @@ do
 	end
 	JM36.Wait, JM36.wait, JM36.yield = Halt, Halt, Halt
 end
+local Threads_HighPriority = {}
+local Threads_New = {}
 local Threads = {}
 do
-	local CreateThread
-	do
-		local table_insert = table.insert
-		local create = coroutine.create
-		CreateThread = function(func)
-			table_insert(Threads, create(func))
-		end
+	local table_insert = table.insert
+	local create = coroutine.create
+	JM36.CreateThread_HighPriority = function(func)
+		table_insert(Threads_HighPriority, create(func))
+	end
+	local CreateThread = function(func)
+		table_insert(Threads_New, create(func))
 	end
 	JM36.CreateThread = CreateThread
 	CreateThread(function() wait=JM36.wait end)
 end
+
+
+
 local Scripts_Init, Scripts_Stop
 do
 	local loopToThread
@@ -56,6 +61,8 @@ do
 	end
 	Scripts_Init = setmetatable({},{
 		__call	=	function(Self)
+						local Scripts_Stop = Scripts_Stop
+						
 						if Info.Enabled then Scripts_Stop() end
 						
 						local Scripts_List, Scripts_NMBR = {}, 0
@@ -75,8 +82,6 @@ do
 						Self.List = Scripts_List
 						
 						do
-							local Scripts_Stop
-								= Scripts_Stop
 							local print, type, pcall, require
 								= print, type, pcall, require
 							for i=1, Scripts_NMBR do
@@ -131,6 +136,9 @@ do
 						for i=1, #Threads do
 							Threads[i]=nil
 						end
+						for i=1, #Threads_New do
+							Threads_New[i]=nil
+						end
 						
 						do
 							local print, pcall = print, pcall
@@ -162,10 +170,37 @@ do
 			local yield = JM36.yield
 			local resume = resume
 			local status = coroutine.status
+			local Threads_HighPriority = Threads_HighPriority
+			local Threads_New = Threads_New
 			local Threads = Threads
 			while true do
-				local j, n = 1, #Threads
-				for i=1,n do
+				do
+					local j = 1
+					for i = 1, #Threads_HighPriority do
+						local Thread = Threads_HighPriority[i]
+						if status(Thread)~="dead" then
+							do
+								local Successful, Error = resume(Thread)
+								if not Successful then print(Error) end
+							end
+							if i ~= j then
+								Threads_HighPriority[j] = Threads_HighPriority[i]
+								Threads_HighPriority[i] = nil
+							end
+							j = j + 1
+						else
+							Threads_HighPriority[i] = nil
+						end
+					end
+				end
+				local ThreadsNum = #Threads
+				for i=1, #Threads_New do
+					ThreadsNum = ThreadsNum + 1
+					Threads[ThreadsNum] = Threads_New[i]
+					Threads_New[i] = nil
+				end
+				local j = 1
+				for i = 1, ThreadsNum do
 					local Thread = Threads[i]
 					if status(Thread)~="dead" then
 						do
@@ -238,7 +273,7 @@ do
 	local setmetatable = setmetatable
 	local _G2
 	do
-		_G2 = { _G2=0,JM36_GTAV_LuaPlugin_Version=20220422.0 }
+		_G2 = { _G2=0,JM36_GTAV_LuaPlugin_Version=20220805.0 }
 		_G2._G2=_G2
 		setmetatable(_G,{__index=_G2})
 	end
@@ -374,7 +409,7 @@ do
 	end
 	Namespaces = nil
 	_G2.IsKeyPressed=get_key_pressed
-	_G2.Wait=wait
+	_G2.Wait=JM36.yield
 	
 	--[[ Automatically load __Internal ]]
 	do
