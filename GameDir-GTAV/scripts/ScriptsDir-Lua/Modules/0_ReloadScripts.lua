@@ -1,12 +1,7 @@
-if DebugMode then
-	JM36.CreateThread(function()
+if DebugMode and not _G2.ReloadScripts then _G2.ReloadScripts = true
+	JM36.CreateThread_HighPriority(function()
 		local Info = Info
 		local yield = JM36.yield
-		
-		if ReloadScripts then
-			yield(ReloadScripts - Info.Time)
-			ReloadScripts = nil
-		end
 		
 		local Scripts_Init, print, IsControlPressed, get_key_pressed
 			= Scripts_Init, print, IsControlPressed, get_key_pressed
@@ -14,9 +9,9 @@ if DebugMode then
 		while true do
 			--[[If Tab Key Pressed and not Alt Key Pressed then]]
 			if get_key_pressed(9) and not IsControlPressed(0, 19) then
-				ReloadScripts = Info.Time + 2500
 				print"Reloading Scripts"
 				Scripts_Init()
+				yield(2499)
 			end
 			yield()
 		end
