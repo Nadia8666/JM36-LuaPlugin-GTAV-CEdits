@@ -155,90 +155,77 @@ _G.Scripts_Init, _G.Scripts_Stop = Scripts_Init, Scripts_Stop
 
 
 
-do
-	local GetTime
-	do
+tick = coroutine.wrap(function()
+	local yield = coroutine.yield
+	local GetTime = coroutine.wrap(function()
 		local os_clock = os.clock
-		GetTime = function()
-			return os_clock()*1000
+		while true do
+			yield(os_clock()*1000)
 		end
-	end
-	do
-		local resume = coroutine.resume
-		local CR = coroutine.create(function()
-			local print = print
-			local yield = JM36.yield
-			local resume = resume
-			local status = coroutine.status
-			local Threads_HighPriority = Threads_HighPriority
-			local Threads_New = Threads_New
-			local Threads = Threads
-			while true do
-				do
-					local j = 1
-					for i = 1, #Threads_HighPriority do
-						local Thread = Threads_HighPriority[i]
-						if status(Thread)~="dead" then
-							do
-								local Successful, Error = resume(Thread)
-								if not Successful then print(Error) end
-							end
-							if i ~= j then
-								Threads_HighPriority[j] = Threads_HighPriority[i]
-								Threads_HighPriority[i] = nil
-							end
-							j = j + 1
-						else
-							Threads_HighPriority[i] = nil
-						end
-					end
-				end
-				local ThreadsNum = #Threads
-				for i=1, #Threads_New do
-					ThreadsNum = ThreadsNum + 1
-					Threads[ThreadsNum] = Threads_New[i]
-					Threads_New[i] = nil
-				end
+	end)
+	
+	local Info = Info
+	local Functions = Info.Functions
+	
+	local print = print
+	local resume = coroutine.resume
+	local status = coroutine.status
+	local Threads_HighPriority = Threads_HighPriority
+	local Threads_New = Threads_New
+	local Threads = Threads
+	
+	while true do
+		Info.Time = GetTime()
+		if Info.Enabled then
+			for i=1, #Functions do
+				Functions[i](Info)
+			end
+			do
 				local j = 1
-				for i = 1, ThreadsNum do
-					local Thread = Threads[i]
+				for i = 1, #Threads_HighPriority do
+					local Thread = Threads_HighPriority[i]
 					if status(Thread)~="dead" then
 						do
 							local Successful, Error = resume(Thread)
 							if not Successful then print(Error) end
 						end
 						if i ~= j then
-							Threads[j] = Threads[i]
-							Threads[i] = nil
+							Threads_HighPriority[j] = Threads_HighPriority[i]
+							Threads_HighPriority[i] = nil
 						end
 						j = j + 1
 					else
+						Threads_HighPriority[i] = nil
+					end
+				end
+			end
+			local ThreadsNum = #Threads
+			for i=1, #Threads_New do
+				ThreadsNum = ThreadsNum + 1
+				Threads[ThreadsNum] = Threads_New[i]
+				Threads_New[i] = nil
+			end
+			local j = 1
+			for i = 1, ThreadsNum do
+				local Thread = Threads[i]
+				if status(Thread)~="dead" then
+					do
+						local Successful, Error = resume(Thread)
+						if not Successful then print(Error) end
+					end
+					if i ~= j then
+						Threads[j] = Threads[i]
 						Threads[i] = nil
 					end
+					j = j + 1
+				else
+					Threads[i] = nil
 				end
-				yield()
-			end
-		end)
-		
-		local Info_Update_Delay = Info_Update_Delay or 0
-		local UpdateInfoTime = 0
-		local Info = Info
-		tick = function()
-			if Info.Enabled then
-				local Time = GetTime()
-				Info.Time = Time
-				if Time >= UpdateInfoTime then
-					local Functions = Info.Functions
-					for i=1, #Functions do
-						Functions[i](Info)
-					end
-					UpdateInfoTime = Time + Info_Update_Delay
-				end
-				resume(CR)
 			end
 		end
+		yield()
 	end
-end
+end)
 
 do
 	--[[ Introduce some new useful string functions ]]
