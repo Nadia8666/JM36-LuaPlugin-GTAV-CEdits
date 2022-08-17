@@ -1,4 +1,4 @@
-if DebugMode and not _G2.ReloadScripts then _G2.ReloadScripts = true
+if DebugMode and not ScriptsReloadTriggerLoaded then ScriptsReloadTriggerLoaded = true
 	JM36.CreateThread_HighPriority(function()
 		local Scripts_Init, print = Scripts_Init, print
 		
