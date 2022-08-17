@@ -1,57 +1,209 @@
---[[ Config Area ]]
+-- Config Area
 DebugMode		= false
 Scripts_Path	= "scripts\\ScriptsDir-Lua\\" or "C:\\Path\\To\\ScriptsDir-Lua\\"
 
 
 
---[[ Script/Code Area ]]
+-- Script/Code Area
+--[[ Define JM36 LP Version ]]
+JM36_GTAV_LuaPlugin_Version=20220817.0
+
+
+
+--[[ Localize all "frequently" used things ]]
+local _G = _G
+local Scripts_Path = Scripts_Path
+local setmetatable = setmetatable
+local pairs = pairs
 local coroutine = coroutine
-Info = {Enabled=false,Time=0,Player=0} local Info = Info
-JM36 = {CreateThread=0,Wait=0,wait=0,yield=0} local JM36 = JM36
+local coroutine_yield = coroutine.yield
+local coroutine_create = coroutine.create
+local coroutine_wrap = coroutine.wrap
+local coroutine_resume = coroutine.resume
+local coroutine_status = coroutine.status
+local table = table
+local table_insert = table.insert
+local table_sort = table.sort
+local io = io
+local io_open = io.open
+local io_lines = io.lines
+local lfs_dir = lfs.dir
+local print = print
+local type = type
+local pcall = pcall
+local require = require
+local collectgarbage = collectgarbage
+
+
+
+
+--[[ Create secondary "global" table for storing tables containing "global" functions, such as natives. ]]
 do
-	local Halt
+	local _G2 = setmetatable
+	(
+		{},
+		{
+			__index = function(Self,Key)
+				for k,v in pairs(Self) do
+					local ReturnValue = type(v)=='table' and v[Key]
+					if ReturnValue then return ReturnValue end
+				end
+			end
+		}
+	)
+	_G._G2 = _G2
+	setmetatable
+	(
+		_G,
+		{
+			__index = function(Self,Key)
+				return _G2[Key]
+			end
+		}
+	)
+end
+
+
+
+--[[ Add string functions ]]
+do
+	local string = string
+	string.split = function(string,sep) -- Split strings into chunks or arguments (in tables)
+		sep = sep or "%s"
+		local t,n={},0
+		for str in string:gmatch("([^"..sep.."]+)") do
+			n=n+1 t[n]=str
+		end
+		return t
+	end
+	
+	string.upperFirst = function(string) -- Make the first letter of a string uppercase
+		return string:sub(1,1):upper()..string:sub(2)
+	end
+	
+	string.startsWith = function(string, startsWith) -- Check if a string starts with something
+		return string:sub(1, #startsWith) == startsWith
+	end
+	string.endsWith = function(string, endsWith) -- Check if a string ends with something
+		return string:sub(-#endsWith) == endsWith
+	end
+end
+
+
+
+--[[ Add useful core/framework functions ]]
+local unrequire
+do
+	local package_loaded = package.loaded
+	function unrequire(script) -- Very useful for script resets/reloads/cleanup
+		package_loaded[script]=nil
+	end
+end
+_G.unrequire = unrequire
+do
+	function configFileRead(configFile,sep) -- Read simple config file
+		sep = sep or "="
+		configFile = io_open(Scripts_Path..configFile)
+		local config = {}
+		if configFile then
+			for line in configFile:lines() do
+				if not (line:startsWith("[") and line:endsWith("]")) then
+					--line = line:gsub("\n","")
+					--line = line:gsub("\r","")
+					if line ~= "" then
+						line = line:split(sep)
+						config[line[1]] = line[2]
+					end
+				end
+			end
+			configFile:close()
+		end
+		return config
+	end
+	
 	do
-		local Info = Info
-		local yield = coroutine.yield
-		Halt = function(ms)
-			local TimeResume = Info.Time+(ms or 0)
-			repeat
-				yield()
-			until Info.Time > TimeResume
+		local tostring = tostring
+		function configFileWrite(configFile, config, sep) -- Write simple config file
+			local configFile, sep = io_open(Scripts_Path..configFile, "w"), sep or "="
+			for k,v in pairs(config) do
+				configFile:write(("%s%s%s\n"):format(k, sep, tostring(v)))
+			end
 		end
 	end
-	JM36.Wait, JM36.wait, JM36.yield = Halt, Halt, Halt
 end
+
+
+
+-- Set up framework
+--[[ Fix Scripts_Path string variable if missing the trailing "//" on the end ]]
+if not Scripts_Path:endsWith("//") then
+	Scripts_Path = Scripts_Path.."//"
+	_G.Scripts_Path = Scripts_Path
+end
+
+--[[ Define other additional Script Paths ]]
+local Script_Modules = Scripts_Path.."Modules//" _G.Script_Modules = Script_Modules -- Modular Script Components/Parts
+local __Script_Modules = Scripts_Path.."__Modules//" _G.__Script_Modules = __Script_Modules -- Shared Script Components/Resources
+local Script_Libs = Scripts_Path.."libs//" _G.Script_Libs = Script_Libs -- Standard libs Directory For Environment
+local __Script_Libs = Scripts_Path.."__libs//" _G.__Script_Libs = __Script_Libs -- Automatically Loaded libs On Startup
+local __Internal_Path = Scripts_Path.."__Internal//" _G.__Internal_Path = __Internal_Path
+
+--[[ Update the search path ]]
+do
+	local package_path = package.path
+	local DirectoriesList = {"Scripts_Path","Script_Modules","__Script_Modules","Script_Libs","__Script_Libs"}
+	local FiletypesList = {".dll",".luac","",".lua"}
+	
+	for i=1,5 do
+		local Directory = _G[DirectoriesList[i]]
+		for j=1,4 do
+			local Filetype = FiletypesList[j]
+			package_path = (".\\?%s;%s?%s;%slibs\\?%s;%slibs\\?\\init%s;%s"):format(Filetype,Directory,Filetype,Directory,Filetype,Directory,Filetype,package_path)
+			--Type,Directory,Type,Directory,Type,Directory,Type,ConcatOnTo
+		end
+	end
+	package.path = package_path
+end
+
 local Threads_HighPriority = {}
 local Threads_New = {}
 local Threads = {}
+
+local Info = {Enabled=false,Time=0,Player=0}
+_G.Info = Info
+
+local JM36 =
+{
+	CreateThread_HighPriority = function(func)
+			table_insert(Threads_HighPriority, coroutine_create(func))
+		end,
+	CreateThread = function(func)
+			table_insert(Threads_New, coroutine_create(func))
+		end,
+	Wait=0,
+	wait=0,
+	yield=0
+}
 do
-	local table_insert = table.insert
-	local create = coroutine.create
-	JM36.CreateThread_HighPriority = function(func)
-		table_insert(Threads_HighPriority, create(func))
+	local Halt = function(ms)
+		local TimeResume = Info.Time+(ms or 0)
+		repeat
+			coroutine_yield()
+		until Info.Time > TimeResume
 	end
-	local CreateThread = function(func)
-		table_insert(Threads_New, create(func))
-	end
-	JM36.CreateThread = CreateThread
-	CreateThread(function() wait=JM36.wait end)
+	JM36.Wait, JM36.wait, JM36.yield = Halt, Halt, Halt
+	JM36.CreateThread_HighPriority(function() wait=JM36.wait;IsKeyPressed=get_key_pressed end)
 end
-
-
+_G.JM36 = JM36
 
 local Scripts_Init, Scripts_Stop
 do
 	local loopToThread
 	do
-		local JM36 = JM36
 		local CreateThread = JM36.CreateThread
 		local yield = JM36.yield
 		loopToThread = function(func)
 			CreateThread(function()
-				local Info = Info
-				local func = func
-				local yield = yield
 				while true do
 					func(Info)
 					yield()
@@ -61,53 +213,46 @@ do
 	end
 	Scripts_Init = setmetatable({},{
 		__call	=	function(Self)
-						local Scripts_Stop = Scripts_Stop
-						
 						if Info.Enabled then Scripts_Stop() end
 						
 						local Scripts_List, Scripts_NMBR = {}, 0
-						do
-							local string_gsub, string_endsWith, lfs_dir
-								= string.gsub, string.endsWith, lfs.dir
-							for Script in lfs_dir(Script_Modules) do
-								if string_endsWith(Script, ".lua") then
-									Scripts_NMBR = Scripts_NMBR+1
-									Scripts_List[Scripts_NMBR] = string_gsub(Script, ".lua", "")
-								end
+						for Script in lfs_dir(Script_Modules) do
+							if Script:endsWith(".lua") then
+								Scripts_NMBR = Scripts_NMBR+1
+								Scripts_List[Scripts_NMBR] = Script:gsub(".lua","")
+							elseif Script:endsWith(".luac") then
+								Scripts_NMBR = Scripts_NMBR+1
+								Scripts_List[Scripts_NMBR] = Script:gsub(".luac","")
 							end
 						end
 						
-						table.sort(Scripts_List)
+						table_sort(Scripts_List)
 						Scripts_List.Num = Scripts_NMBR
 						Self.List = Scripts_List
 						
-						do
-							local print, type, pcall, require
-								= print, type, pcall, require
-							for i=1, Scripts_NMBR do
-								local Successful, Script = pcall(require, Scripts_List[i])
-								if Successful then
-									if type(Script)=='table' then
-										Self[#Self+1] = Script.init
-										
-										Scripts_Stop[#Scripts_Stop+1] = (Script.stop or Script.unload)
-										
-										local loop = (Script.loop or Script.tick)
-										if loop then
-											loopToThread(loop)
-										end
+						for i=1, Scripts_NMBR do
+							local Successful, Script = pcall(require, Scripts_List[i])
+							if Successful then
+								if type(Script)=='table' then
+									Self[#Self+1] = Script.init
+									
+									Scripts_Stop[#Scripts_Stop+1] = (Script.stop or Script.unload)
+									
+									local loop = (Script.loop or Script.tick)
+									if loop then
+										loopToThread(loop)
 									end
-								else
-									print(Script)
 								end
+							else
+								print(Script)
 							end
 						end
-						do
-							local print, pcall = print, pcall
+						
+						JM36.CreateThread_HighPriority(function()
 							for i=1, #Self do
 								local Successful, Error = pcall(Self[i], Info) if not Successful then print(Error) end
 							end
-						end
+						end)
 						
 						Info.Enabled = true
 					end
@@ -118,19 +263,13 @@ do
 		__call  =   function(Self)
 						Info.Enabled = false
 						
-						do
-							local Scripts_Init = Scripts_Init
-							do
-								local unrequire = unrequire
-								local Scripts_List = Scripts_Init.List
-								for i=1, Scripts_List.Num do
-									unrequire(Scripts_List[i])
-								end
-							end
-							
-							for i=1, #Scripts_Init do
-								Scripts_Init[i]=nil
-							end
+						local Scripts_List = Scripts_Init.List
+						for i=1, Scripts_List.Num do
+							unrequire(Scripts_List[i])
+						end
+						
+						for i=1, #Scripts_Init do
+							Scripts_Init[i]=nil
 						end
 						
 						for i=1, #Threads do
@@ -140,11 +279,8 @@ do
 							Threads_New[i]=nil
 						end
 						
-						do
-							local print, pcall = print, pcall
-							for i=1, #Self do
-								local Successful, Error = pcall(Self[i], Info) if not Successful then print(Error) end Self[i]=nil
-							end
+						for i=1, #Self do
+							local Successful, Error = pcall(Self[i], Info) if not Successful then print(Error) end Self[i]=nil
 						end
 						
 						collectgarbage()
@@ -155,24 +291,180 @@ _G.Scripts_Init, _G.Scripts_Stop = Scripts_Init, Scripts_Stop
 
 
 
-tick = coroutine.wrap(function()
-	local yield = coroutine.yield
-	local GetTime = coroutine.wrap(function()
+--[[ Automatically load __Internal ]]
+do
+	local Functions = setmetatable({},{
+		__call  =   function(Self)
+						for i=1, #Self do
+							Self[i](Info)
+						end
+					end
+	})
+	Info.Functions = Functions
+	
+	local package = package
+	local package_path_orig = package.path
+	
+	package.path = ("%s?.lua;%s?.luac"):format(__Internal_Path,__Internal_Path)
+	
+	local List, ListNum = {}, 0
+	for Lib in lfs_dir(__Internal_Path) do
+		if Lib:endsWith(".lua") then
+			ListNum = ListNum+1
+			List[ListNum] = Lib:gsub(".lua","")
+		elseif Lib:endsWith(".luac") then
+			ListNum = ListNum+1
+			List[ListNum] = Lib:gsub(".luac","")
+		end
+	end
+	table_sort(List)
+	local FunctionsNum = 0
+	for i=1, ListNum do
+		local Successful, Function = pcall(require, List[i])
+		if Successful then
+			local Type = type(Function)
+			if Type == "table" then
+				if not Function.InfoKeyOnly then
+					FunctionsNum = FunctionsNum + 1
+					Functions[FunctionsNum] = Function
+				end
+				local Key = Function.InfoKeyName
+				if type(Key) == "string" then
+					Info[Key] = Function
+				end
+			elseif Type == "function" then
+				FunctionsNum = FunctionsNum + 1
+				Functions[FunctionsNum] = Function
+			end
+		else
+			print(Function)
+		end
+	end
+	
+	package.path = package_path_orig
+end
+
+--[[ Automatically load __libs ]]
+do
+	local __libs_List, __libs_NMBR = {}, 0
+	for __lib in lfs_dir(__Script_Libs) do
+		if __lib:endsWith(".lua") then
+			__libs_NMBR = __libs_NMBR+1
+			__libs_List[__libs_NMBR] = __lib:gsub(".lua","")
+		elseif __lib:endsWith(".luac") then
+			__libs_NMBR = __libs_NMBR+1
+			__libs_List[__libs_NMBR] = __lib:gsub(".luac","")
+		end
+	end
+	
+	table_sort(__libs_List)
+	
+	for i=1, __libs_NMBR do
+		local Successful, __lib = pcall(require, __libs_List[i])
+		if not Successful then
+			print(__lib)
+		end
+	end
+end
+
+--[[ Compatability with existing LuaPlugin scripts ]]
+Keys = require("Keys")
+do
+	local loaded = package.loaded
+	Libs = setmetatable({},{
+		__mode		=	"kv",
+		__index		=	function(Self, Key)
+							local Value = loaded[Key] or require(Key)
+							Self[Key] = Value
+							return Value
+						end,
+	})
+end
+if not DisableMigrator then
+--	do
+--		local DirectoryExists, ReturnValue = pcall(lfs_dir, "scripts")
+--		local inspect = require'inspect'
+--		print(inspect(DirectoryExists), inspect(ReturnValue))
+--	end
+	
+	local io_popen, string_find, os_execute = io.popen, string.find, os.execute
+	local ExecTail = " > nul 2> nul"
+	--print("Migration commencing.")
+	local Scripts_Path, Script_Modules = Scripts_Path, Script_Modules
+	do
+		local string_gsub = string.gsub
+		Scripts_Path, Script_Modules = string_gsub(Scripts_Path, "//", "\\"), string_gsub(Script_Modules, "//", "\\")
+		Scripts_Path, Script_Modules = string_gsub(Scripts_Path, "\\\\", "\\"), string_gsub(Script_Modules, "\\\\", "\\")
+	end
+	local Scripts_Dir = io_popen("dir scripts /w")
+	local _Scripts_Dir = Scripts_Dir:read("*a")
+	Scripts_Dir:close()
+	if string_find(_Scripts_Dir, "addins") then
+		os_execute("del scripts\\addins\\basemodule.lua"..ExecTail)
+		os_execute("del scripts\\addins\\exampleGUI.lua"..ExecTail)
+		os_execute("robocopy scripts\\addins "..Script_Modules.." /mt /s /move"..ExecTail)
+		os_execute("rd scripts\\addins /s /q"..ExecTail)
+		print('Migrated "scripts\\addins" to "'..Script_Modules..'".')
+	end
+	if string_find(_Scripts_Dir, "libs") then
+		os_execute("del scripts\\libs\\GUI.lua"..ExecTail)
+		os_execute("robocopy scripts\\libs "..Script_Libs.." /mt /s /move"..ExecTail)
+		os_execute("rd scripts\\libs /s /q"..ExecTail)
+		print('Migrated "scripts\\libs" to "'..Script_Libs..'".')
+	end
+	if string_find(_Scripts_Dir, "keys.lua") then
+		os_execute("del scripts\\keys.lua"..ExecTail)
+		print('Removed (legacy) "scripts\\keys.lua"')
+	end
+	if string_find(_Scripts_Dir, "utils.lua") then
+		os_execute("del scripts\\utils.lua"..ExecTail)
+		print('Removed (legacy) "scripts\\utils.lua"')
+	end
+	--print("Migration concluded.")
+end
+--[[ Compatability with existing JM36 Lua Plugin scripts ]]
+if not DisableMigrator then
+	local io_popen, string_find, os_execute = io.popen, string.find, os.execute
+	local ExecTail = " > nul 2> nul"
+	--print("Migration commencing.")
+	local Scripts_Path, Script_Modules = Scripts_Path, Script_Modules
+	do
+		local string_gsub = string.gsub
+		Scripts_Path, Script_Modules = string_gsub(Scripts_Path, "//", "\\"), string_gsub(Script_Modules, "//", "\\")
+		Scripts_Path, Script_Modules = string_gsub(Scripts_Path, "\\\\", "\\"), string_gsub(Script_Modules, "\\\\", "\\")
+	end
+	local Scripts_Dir = io_popen('dir "'..Scripts_Path..'" /w')
+	local _Scripts_Dir = Scripts_Dir:read("*a")
+	Scripts_Dir:close()
+	if string_find(_Scripts_Dir, ".lua") then
+		os_execute('robocopy "'..Scripts_Path..'\\" "'..Script_Modules..'\\" "*.lua" /mt /move'..ExecTail)
+		--os_execute('DEL /Q /F "'..Scripts_Path..'*.lua"'..ExecTail)
+		--print('Migrated '..Scripts_Path..' to "'..Script_Modules..'".')
+		--print('Legacy JM36 LP Scripts Migrated.')
+	end
+	--print("Migration concluded.")
+end
+
+
+
+--[[ Create init "handler" function for lp ]]
+init = function()
+	collectgarbage()
+	Scripts_Init()
+end
+
+
+
+--[[ Create tick "handler" function for lp ]]
+tick = coroutine_wrap(function()
+	local GetTime = coroutine_wrap(function()
 		local os_clock = os.clock
 		while true do
-			yield(os_clock()*1000)
+			coroutine_yield(os_clock()*1000)
 		end
 	end)
 	
-	local Info = Info
 	local Functions = Info.Functions
-	
-	local print = print
-	local resume = coroutine.resume
-	local status = coroutine.status
-	local Threads_HighPriority = Threads_HighPriority
-	local Threads_New = Threads_New
-	local Threads = Threads
 	
 	while true do
 		Info.Time = GetTime()
@@ -184,9 +476,9 @@ tick = coroutine.wrap(function()
 				local j = 1
 				for i = 1, #Threads_HighPriority do
 					local Thread = Threads_HighPriority[i]
-					if status(Thread)~="dead" then
+					if coroutine_status(Thread)~="dead" then
 						do
-							local Successful, Error = resume(Thread)
+							local Successful, Error = coroutine_resume(Thread)
 							if not Successful then print(Error) end
 						end
 						if i ~= j then
@@ -208,9 +500,9 @@ tick = coroutine.wrap(function()
 			local j = 1
 			for i = 1, ThreadsNum do
 				local Thread = Threads[i]
-				if status(Thread)~="dead" then
+				if coroutine_status(Thread)~="dead" then
 					do
-						local Successful, Error = resume(Thread)
+						local Successful, Error = coroutine_resume(Thread)
 						if not Successful then print(Error) end
 					end
 					if i ~= j then
@@ -223,356 +515,6 @@ tick = coroutine.wrap(function()
 				end
 			end
 		end
-		yield()
+		coroutine_yield()
 	end
 end)
-
-do
-	--[[ Introduce some new useful string functions ]]
-	do
-		local string = string
-		
-		do
-			local string_gmatch = string.gmatch
-			string.split = function(inputstr,sep) -- Split strings into chunks or arguments (in tables)
-				sep = sep or "%s" local t,n={},0
-				for str in string_gmatch(inputstr, "([^"..sep.."]+)") do
-					n=n+1 t[n]=str
-				end
-				return t
-			end
-		end
-		
-		string.upperFirst = function(s) -- Make the first letter of a string uppercase
-			return s:sub(1,1):upper()..s:sub(2)
-		end
-		
-		string.startsWith = function(str, start) -- Check if a string starts with something
-			return str:sub(1, #start) == start
-		end
-		
-		string.endsWith = function(str, ending) -- Check if a string ends with something
-			return ending == "" or str:sub(-#ending) == ending
-		end
-	end
-	
-	--[[ Introduce/Create a new Secondary Global Environment Variable ]]
-	local setmetatable = setmetatable
-	local _G2
-	do
-		_G2 = { _G2=0,JM36_GTAV_LuaPlugin_Version=20220805.0 }
-		_G2._G2=_G2
-		setmetatable(_G,{__index=_G2})
-	end
-	
-	--[[ Introduce some new useful core functions ]]
-	do
-		local package_loaded = package.loaded
-		function _G2.unrequire(script) -- Very useful for script resets/reloads/cleanup
-			package_loaded[script]=nil
-		end
-	end
-	do
-		local io_open, string_split, string_gsub, string_endsWith, string_startsWith, io_lines
-			= io.open, string.split, string.gsub, string.endsWith, string.startsWith, io.lines
-		function _G2.configFileRead(file, sep) -- Read simple config file
-			file, sep = Scripts_Path..file, sep or "="
-			local config, configFile = {}, io_open(file)
-			if configFile then
-				for line in io_lines(file) do
-					if not (string_startsWith(line, "[") and string_endsWith(line, "]")) then
-						line = string_gsub(line, "\n", "") line = string_gsub(line, "\r", "")
-						if line ~= "" then
-							line = string_split(line, sep)
-							config[line[1]] = line[2]
-						end
-					end
-				end
-				configFile:close()
-			end
-			return config
-		end
-	end
-	do
-		local io_open, string_format, tostring, pairs
-			= io.open, string.format, tostring, pairs
-		function _G2.configFileWrite(file, config, sep) -- Write simple config file
-			local configFile, sep = io_open(Scripts_Path..file, "w"), sep or "="
-			for k,v in pairs(config) do
-				configFile:write(string_format("%s%s%s\n", k, sep, tostring(v)))
-			end
-		end
-	end
-	
-	--[[ Fix Scripts_Path string variable if missing the trailing "//" on the end ]]
-	if not string.endsWith(Scripts_Path, "//") then
-		Scripts_Path = Scripts_Path.."//"
-	end
-	
-	--[[ Define other additional Script Paths ]]
-	Script_Modules = Scripts_Path.."Modules//" -- Modular Script Components/Parts
-	__Script_Modules = Scripts_Path.."__Modules//" -- Shared Script Components/Resources
-	Script_Libs = Scripts_Path.."libs//" -- Standard libs Directory For Environment
-	__Script_Libs = Scripts_Path.."__libs//" -- Automatically Loaded libs On Startup
-	__Internal_Path = Scripts_Path.."__Internal//"
-	
-	--[[ Update the search path ]]
-	do
-		local package_path = package.path
-		local string_format = string.format
-		local _G = _G
-		local DirectoriesList = {"Scripts_Path","Script_Modules","__Script_Modules","Script_Libs","__Script_Libs"}
-		for i=1,5 do
-			local Directory = _G[DirectoriesList[i]]
-			package_path = string_format(".\\?.dll;%s?.dll;%slibs\\?.dll;%slibs\\?\\init.dll;%s", Directory, Directory, Directory, package_path) -- DLL
-			package_path = string_format(".\\?.lua;%s?.lua;%slibs\\?.lua;%slibs\\?\\init.lua;%s", Directory, Directory, Directory, package_path) -- Lua
-			package_path = string_format(".\\?;%s?;%slibs\\?;%slibs\\?\\init;%s", Directory, Directory, Directory, package_path) -- NoExtension
-		end
-		package.path = package_path
-	end
-	
-	--[[ Introduce/Create FiveM style game native function calls ]]
-	local Namespaces	= {
-		PLAYER			= true,
-		ENTITY			= true,
-		PED				= true,
-		VEHICLE			= true,
-		OBJECT			= true,
-		AI				= true,
-		GAMEPLAY		= true,
-		AUDIO			= true,
-		CUTSCENE		= true,
-		INTERIOR		= true,
-		CAM				= true,
-		WEAPON			= true,
-		ITEMSET			= true,
-		STREAMING		= true,
-		SCRIPT			= true,
-		UI				= true,
-		GRAPHICS		= true,
-		STATS			= true,
-		BRAIN			= true,
-		MOBILE			= true,
-		APP				= true,
-		TIME			= true,
-		PATHFIND		= true,
-		CONTROLS		= true,
-		DATAFILE		= true,
-		FIRE			= true,
-		DECISIONEVENT	= true,
-		ZONE			= true,
-		ROPE			= true,
-		WATER			= true,
-		WORLDPROBE		= true,
-		NETWORK			= true,
-		NETWORKCASH		= true,
-		DLC1			= true,
-		DLC2			= true,
-		SYSTEM			= true,
-		DECORATOR		= true,
-		SOCIALCLUB		= true,
-		UNK				= true,
-		UNK1			= true,
-		UNK2			= true,
-		UNK3			= true,
-	}
-	
-	local table_concat, string_upperFirst, string_lower, string_split, string_startsWith, _G, pairs
-        = table.concat, string.upperFirst, string.lower, string.split, string.startsWith, _G, pairs
-	for k,v in pairs(_G) do
-		if Namespaces[k] then
-			for k,v in pairs(_G[k]) do
-				if string_startsWith(k, "_0x") then
-					_G2[k] = v
-				else
-					k = string_split(k, "_")
-					for i=1, #k do
-						k[i] = string_upperFirst(string_lower(k[i]))
-					end
-					_G2[table_concat(k)] = v
-				end
-			end
-		end
-	end
-	Namespaces = nil
-	_G2.IsKeyPressed=get_key_pressed
-	_G2.Wait=JM36.yield
-	
-	--[[ Automatically load __Internal ]]
-	do
-		local Info = Info
-		
-		local Functions = setmetatable({},{
-			__call  =   function(Self)
-							local Info = Info
-							for i=1, #Self do
-								Self[i](Info)
-							end
-						end
-		})
-		Info.Functions = Functions
-		
-		local package = package
-		local package_path_orig = package.path
-		
-		local __Internal_Path = __Internal_Path
-		
-		package.path = string.format("%s?.lua", __Internal_Path)
-		
-		local List, ListNum = {}, 0
-		do
-			local string_gsub, string_endsWith, lfs_dir
-				= string.gsub, string.endsWith, lfs.dir
-			for Lib in lfs_dir(__Internal_Path) do
-				if string_endsWith(Lib, ".lua") then
-					ListNum = ListNum+1
-					List[ListNum] = string_gsub(Lib, ".lua", "")
-				end
-			end
-		end
-		table.sort(List)
-		do
-			local pcall, require, type, print
-				= pcall, require, type, print
-			local FunctionsNum = 0
-			for i=1, ListNum do
-				local Successful, Function = pcall(require, List[i])
-				if Successful then
-					local Type = type(Function)
-					if Type == "table" then
-						if not Function.InfoKeyOnly then
-							FunctionsNum = FunctionsNum + 1
-							Functions[FunctionsNum] = Function
-						end
-						local Key = Function.InfoKeyName
-						if type(Key) == "string" then
-							Info[Key] = Function
-						end
-					elseif Type == "function" then
-						FunctionsNum = FunctionsNum + 1
-						Functions[FunctionsNum] = Function
-					end
-				else
-					print(Function)
-				end
-			end
-		end
-		
-		package.path = package_path_orig
-	end
-	
-	--[[ Automatically load __libs ]]
-	do
-		local __libs_List, __libs_NMBR = {}, 0
-		do
-			local string_gsub, string_endsWith, lfs_dir
-				= string.gsub, string.endsWith, lfs.dir
-			for __lib in lfs_dir(__Script_Libs) do
-				if string_endsWith(__lib, ".lua") then
-					__libs_NMBR = __libs_NMBR+1
-					__libs_List[__libs_NMBR] = string_gsub(__lib, ".lua", "")
-				end
-			end
-		end
-		
-		table.sort(__libs_List)
-		
-		do
-			local print, pcall, require
-				= print, pcall, require
-			for i=1, __libs_NMBR do
-				local Successful, __lib = pcall(require, __libs_List[i])
-				if not Successful then
-					print(__lib)
-				end
-			end
-		end
-	end
-	
-	--[[ Compatability with existing LuaPlugin scripts ]]
-	do
-		local require = require
-		Keys = require("Keys")
-		do
-			local loaded = package.loaded
-			Libs = setmetatable({},{
-				__mode		=	"kv",
-				__index		=	function(Self, Key)
-									local Value = loaded[Key] or require(Key)
-									Self[Key] = Value
-									return Value
-								end,
-			})
-		end
-		if not DisableMigrator then
-			local io_popen, string_find, os_execute = io.popen, string.find, os.execute
-			local ExecTail = " > nul 2> nul"
-			--print("Migration commencing.")
-			local Scripts_Path, Script_Modules = Scripts_Path, Script_Modules
-			do
-				local string_gsub = string.gsub
-				Scripts_Path, Script_Modules = string_gsub(Scripts_Path, "//", "\\"), string_gsub(Script_Modules, "//", "\\")
-				Scripts_Path, Script_Modules = string_gsub(Scripts_Path, "\\\\", "\\"), string_gsub(Script_Modules, "\\\\", "\\")
-			end
-			local Scripts_Dir = io_popen("dir scripts /w")
-			local _Scripts_Dir = Scripts_Dir:read("*a")
-			Scripts_Dir:close()
-			if string_find(_Scripts_Dir, "addins") then
-				os_execute("del scripts\\addins\\basemodule.lua"..ExecTail)
-				os_execute("del scripts\\addins\\exampleGUI.lua"..ExecTail)
-				os_execute("robocopy scripts\\addins "..Script_Modules.." /mt /s /move"..ExecTail)
-				os_execute("rd scripts\\addins /s /q"..ExecTail)
-				print('Migrated "scripts\\addins" to "'..Script_Modules..'".')
-			end
-			if string_find(_Scripts_Dir, "libs") then
-				os_execute("del scripts\\libs\\GUI.lua"..ExecTail)
-				os_execute("robocopy scripts\\libs "..Script_Libs.." /mt /s /move"..ExecTail)
-				os_execute("rd scripts\\libs /s /q"..ExecTail)
-				print('Migrated "scripts\\libs" to "'..Script_Libs..'".')
-			end
-			if string_find(_Scripts_Dir, "keys.lua") then
-				os_execute("del scripts\\keys.lua"..ExecTail)
-				print('Removed (legacy) "scripts\\keys.lua"')
-			end
-			if string_find(_Scripts_Dir, "utils.lua") then
-				os_execute("del scripts\\utils.lua"..ExecTail)
-				print('Removed (legacy) "scripts\\utils.lua"')
-			end
-			--print("Migration concluded.")
-		end
-	end
-	
-	--[[ Compatability with existing JM36 Lua Plugin scripts ]]
-	do
-		if not DisableMigrator then
-			local io_popen, string_find, os_execute = io.popen, string.find, os.execute
-			local ExecTail = " > nul 2> nul"
-			--print("Migration commencing.")
-			local Scripts_Path, Script_Modules = Scripts_Path, Script_Modules
-			do
-				local string_gsub = string.gsub
-				Scripts_Path, Script_Modules = string_gsub(Scripts_Path, "//", "\\"), string_gsub(Script_Modules, "//", "\\")
-				Scripts_Path, Script_Modules = string_gsub(Scripts_Path, "\\\\", "\\"), string_gsub(Script_Modules, "\\\\", "\\")
-			end
-			local Scripts_Dir = io_popen('dir "'..Scripts_Path..'" /w')
-			local _Scripts_Dir = Scripts_Dir:read("*a")
-			Scripts_Dir:close()
-			if string_find(_Scripts_Dir, ".lua") then
-				os_execute('robocopy "'..Scripts_Path..'\\" "'..Script_Modules..'\\" "*.lua" /mt /move'..ExecTail)
-				--os_execute('DEL /Q /F "'..Scripts_Path..'*.lua"'..ExecTail)
-				--print('Migrated '..Scripts_Path..' to "'..Script_Modules..'".')
-				--print('Legacy JM36 LP Scripts Migrated.')
-			end
-			--print("Migration concluded.")
-		end
-	end
-end
-
-do
-	local Scripts_Init, collectgarbage
-		= Scripts_Init, collectgarbage
-	init = function()
-		collectgarbage()
-		Scripts_Init()
-	end
-end
