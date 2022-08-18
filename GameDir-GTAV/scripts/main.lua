@@ -101,15 +101,13 @@ do
 end
 _G.unrequire = unrequire
 do
-	function configFileRead(configFile,sep) -- Read simple config file
-		sep = sep or "="
-		configFile = io_open(Scripts_Path..configFile)
-		local config = {}
+	function configFileRead(file,sep) -- Read simple config file
+		file = Scripts_Path..file;sep = sep or "="
+		local configFile = io_open(file);local config = {}
 		if configFile then
-			for line in configFile:lines() do
+			for line in io_lines(file) do
 				if not (line:startsWith("[") and line:endsWith("]")) then
-					--line = line:gsub("\n","")
-					--line = line:gsub("\r","")
+					line = line:gsub("\n","");line = line:gsub("\r","")
 					if line ~= "" then
 						line = line:split(sep)
 						config[line[1]] = line[2]
