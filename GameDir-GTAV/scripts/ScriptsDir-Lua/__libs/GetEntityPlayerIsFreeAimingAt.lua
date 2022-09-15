@@ -1,3 +1,3 @@
 local _GetEntityPlayerIsFreeAimingAt = PLAYER._GET_AIMED_ENTITY
 GetEntityPlayerIsFreeAimingAt = _GetEntityPlayerIsFreeAimingAt
-return GetEntityPlayerIsFreeAimingAt
+return _GetEntityPlayerIsFreeAimingAt
