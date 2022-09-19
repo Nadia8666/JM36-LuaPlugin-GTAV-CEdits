@@ -184,10 +184,14 @@ local JM36 =
 }
 do
 	local Halt = function(ms)
-		local TimeResume = Info.Time+(ms or 0)
-		repeat
+		if not ms then
 			coroutine_yield()
-		until Info.Time > TimeResume
+		else
+			ms = Info.Time+ms
+			repeat
+				coroutine_yield()
+			until Info.Time > ms
+		end
 	end
 	JM36.Wait, JM36.wait, JM36.yield = Halt, Halt, Halt
 	JM36.CreateThread_HighPriority(function() wait=JM36.wait;IsKeyPressed=get_key_pressed end)
