@@ -1,7 +1,7 @@
 -- DONT RENAME THIS FILE
--- This should be 0A_Natives-1663590538.lua wherein 1663590538 represents the version.
+-- This should be 0A_Natives-1669843920.lua wherein 1669843920 represents the version.
 
-JM36_GTAV_LuaPlugin_FunctionRemapper_Version = 20220919.0
+JM36_GTAV_LuaPlugin_FunctionRemapper_Version = 20221130.0
 local OldNames =
 {
 	["AddAMarkerOverVehicle"]="AreWingsOfPlaneIntact",
@@ -27,7 +27,6 @@ local OldNames =
 	["AnimpostfxStopAndDoUnk"]="AnimpostfxStopAndFlushRequests",
 	["AnyPassengersRappeling"]="IsAnyPedRappellingFromHeli",
 	["ApplyPedOverlay"]="AddPedDecorationFromHashes",
-	["AreAllVehicleWindowsIntact"]="AreAllVehicleWindowsIntact",
 	["AreCoordsCollidingWithExterior"]="IsCollisionMarkedOutside",
 	["AreIntegersEqual"]="IsTimeEqualTo",
 	["ArePathNodesLoadedInArea"]="AreNodesLoadedForArea",
@@ -164,13 +163,11 @@ local OldNames =
 	["GetActiveWebsiteId"]="GetCurrentWebpageId",
 	["GetAiBlip"]="GetAiPedVehicleBlipIndex",
 	["GetAiBlip2"]="GetAiPedPedBlipIndex",
-	["GetAnimDuration"]="GetAnimDuration",
 	["GetBlipInfoIdIterator"]="GetWaypointBlipEnumId",
 	["GetBoatAnchor"]="CanAnchorBoatHere",
 	["GetBoatBoomPositionRatio2"]="SwingBoatBoomFreely",
 	["GetBoatBoomPositionRatio3"]="AllowBoatBoomToAnimate",
 	["GetBroadcastFinshedLosSound"]="LobbySetAutoMultiplayer",
-	["GetCamActiveViewModeContext"]="GetCamActiveViewModeContext",
 	["GetCargobobHookPosition"]="GetAttachedPickUpHookPosition",
 	["GetContentCategory"]="UgcGetContentCategory",
 	["GetContentDescriptionHash"]="UgcGetContentDescriptionHash",
@@ -209,8 +206,6 @@ local OldNames =
 	["GetHeightmapTopZForArea"]="GetApproxHeightForArea",
 	["GetHeightmapTopZForPosition"]="GetApproxHeightForPoint",
 	["GetHeliEngineHealth"]="GetHeliTailBoomHealth",
-	["GetHeliMainRotorHealth"]="GetHeliMainRotorHealth",
-	["GetHeliTailRotorHealth"]="GetHeliTailRotorHealth",
 	["GetIdOfNextThreadInEnumeration"]="ScriptThreadIteratorGetNextThreadId",
 	["GetIsMultiplayerBrief"]="SetGameplayHintCameraBlendToFollowPedMediumViewMode",
 	["GetIsProjectileTypeInArea"]="GetCoordsOfProjectileTypeInArea",
@@ -246,7 +241,6 @@ local OldNames =
 	["GetPauseMenuSelectionData"]="GetMenuLayoutChangedEventDetails",
 	["GetPedAmmoType"]="GetPedAmmoTypeFromWeapon",
 	["GetPedFloodInvincibility"]="RequestPedVehicleVisibilityTracking",
-	["GetPedHeadBlendData"]="GetPedHeadBlendData",
 	["GetPedInsideExplosionArea"]="GetOwnerOfExplosionInAngledArea",
 	["GetPedKiller"]="GetPedSourceOfDeath",
 	["GetPickupHash"]="ConvertOldPickupTypeToNew",
@@ -271,7 +265,6 @@ local OldNames =
 	["GetScriptGfxPosition"]="GetScriptGfxAlignPosition",
 	["GetShapeTestResultEx"]="GetShapeTestResultIncludingMaterial",
 	["GetStatusOfDrawLowQualityPhoto"]="GetStatusOfCreateLowQualityCopyOfPhoto",
-	["GetStatusOfTextureDownload"]="GetStatusOfTextureDownload",
 	["GetSupportsGpsRouteFlag"]="GetVehicleNodeIsGpsAllowed",
 	["GetTattooCollectionData"]="GetTattooShopDlcItemData",
 	["GetTattooZone"]="GetPedDecorationZoneFromHashes",
@@ -287,7 +280,6 @@ local OldNames =
 	["GetTunablesContentModifierId"]="NetworkGetContentModifierListId",
 	["GetTupstatIntHash"]="GetPackedTuIntStatKey",
 	["GetUsedCreatorModelMemoryPercentage"]="GetUsedCreatorBudget",
-	["GetUtcTime"]="GetUtcTime",
 	["GetVehicleAttachedToEntity"]="FindHandlerVehicleContainerIsAttachedTo",
 	["GetVehicleClassMaxSpeed"]="GetVehicleClassEstimatedMaxSpeed",
 	["GetVehicleCurrentSlipstreamDraft"]="GetVehicleCurrentTimeInSlipStream",
@@ -314,7 +306,6 @@ local OldNames =
 	["GrassLodResetScriptAreas"]="GrassbatchDisableFlattening",
 	["GrassLodShrinkScriptAreas"]="GrassbatchEnableFlatteningInSphere",
 	["HasButtonCombinationJustBeenEntered"]="HasCheatWithHashBeenActivated",
-	["HasCutsceneCutThisFrame"]="HasCutsceneCutThisFrame",
 	["HasFilledVehiclePopulation"]="HasInstantFillVehiclePopulationFinished",
 	["HasHudScaleformLoaded"]="HasScaleformScriptHudMovieLoaded",
 	["HasMpGamerTag"]="IsMpGamerTagMovieActive",
@@ -339,7 +330,6 @@ local OldNames =
 	["IsAnyVehicleSeatEmpty"]="AreAnyVehicleSeatsFree",
 	["IsCargobobHookActive"]="DoesCargobobHavePickUpRope",
 	["IsDlcDataEmpty"]="IsContentItemLocked",
-	["IsEntityAGhost"]="IsEntityAGhost",
 	["IsEntityGhostedToLocalPlayer"]="IsEntityAGhost",
 	["IsGameUsingMetricMeasurementSystem"]="ShouldUseMetricMeasurements",
 	["IsHandlerFrameAboveContainer"]="IsHandlerFrameLinedUpWithContainer",
@@ -414,7 +404,6 @@ local OldNames =
 	["NetGameserverDeleteCharacterSlotGetStatus"]="NetGameserverDeleteCharacterGetStatus",
 	["NetGameserverGetCatalogCrc"]="NetGameserverGetCatalogCloudCrc",
 	["NetworkAcceptInvite"]="NetworkRequestInviteConfirmedEvent",
-	["NetworkAddEntityAngledArea"]="NetworkAddEntityAngledArea",
 	["NetworkAddEntityDisplayedBoundaries"]="NetworkAddClientEntityArea",
 	["NetworkAllowLocalEntityAttachment"]="NetworkAllowRemoteAttachmentModification",
 	["NetworkAreRosAvailable"]="NetworkHasValidRosCredentials",
@@ -463,7 +452,6 @@ local OldNames =
 	["NetworkPlayerIsInClan"]="NetworkClanServiceIsValid",
 	["NetworkPlayerIsUnk"]="NetworkPlayerGetCheaterReason",
 	["NetworkPlayerSomething"]="NetworkPlayerIndexIsCheater",
-	["NetworkRequestCloudBackgroundScripts"]="NetworkRequestCloudBackgroundScripts",
 	["NetworkRespawnCoords"]="NetworkLeavePedBehindBeforeWarp",
 	["NetworkSctvSlots"]="NetworkSessionSetMatchmakingGroup",
 	["NetworkSendPresenceInvite"]="NetworkSendInviteViaPresence",
@@ -518,7 +506,6 @@ local OldNames =
 	["ObjectValueGetVector3"]="DatadictGetVector",
 	["OpenVehicleBombBay"]="OpenBombBayDoors",
 	["OverrideDecalTexture"]="PatchDecalDiffuseMap",
-	["OverrideMicrophoneSettings"]="OverrideMicrophoneSettings",
 	["PausedScreenblurLoaded"]="DisableScreenblurFade",
 	["PedSkipNextReloading"]="RefillAmmoInstantly",
 	["PlayAmbientSpeech1"]="PlayPedAmbientSpeechNative",
@@ -574,7 +561,6 @@ local OldNames =
 	["ResetLocalplayerState"]="ForceGameStatePlaying",
 	["ResetPedRagdollBlockingFlags"]="ClearRagdollBlockingFlags",
 	["ResetSpecialAbilityControlsCinematic"]="SpecialAbilityChargeNormalized",
-	["ResetVehicleStartupRevSound"]="ResetVehicleStartupRevSound",
 	["RespondingAsTemp"]="SetRadarZoomPrecise",
 	["ReturnTwo"]="GetLoadHighQualityPhotoStatus",
 	["ReturnZero"]="LobbyAutoMultiplayerMenu",
@@ -583,7 +569,6 @@ local OldNames =
 	["ScreenDrawPositionEnd"]="ResetScriptGfxAlign",
 	["ScreenDrawPositionRatio"]="SetScriptGfxAlignParams",
 	["Set2dLayer"]="SetScriptGfxDrawOrder",
-	["SetAchievementProgress"]="SetAchievementProgress",
 	["SetAchievementProgression"]="SetAchievementProgress",
 	["SetAiBlipMaxDistance"]="SetPedAiBlipNoticeRange",
 	["SetAiBlipType"]="SetPedAiBlipGangId",
@@ -606,14 +591,10 @@ local OldNames =
 	["SetBoatFrozenWhenAnchored"]="SetBoatRemainsAnchoredWhilePlayerIsDriver",
 	["SetBoatMovementResistance"]="SetBoatLowLodAnchorDistance",
 	["SetCamControlsRadarRotation"]="SetCamControlsMiniMapHeading",
-	["SetCamDofFnumberOfLens"]="SetCamDofFnumberOfLens",
-	["SetCamDofMaxNearInFocusDistance"]="SetCamDofMaxNearInFocusDistance",
-	["SetCamDofMaxNearInFocusDistanceBlendLevel"]="SetCamDofMaxNearInFocusDistanceBlendLevel",
 	["SetCamEffect"]="SetCamDeathFailEffectState",
 	["SetCamSmoothShadows"]="SetCamIsInsideVehicle",
 	["SetCameraEndtime"]="EnableClownBloodVfx",
 	["SetCameraRange"]="SetFlyCamMaxHeight",
-	["SetCarHighSpeedBumpSeverityMultiplier"]="SetCarHighSpeedBumpSeverityMultiplier",
 	["SetCheckpointIconRgba"]="SetCheckpointRgba2",
 	["SetCheckpointScale"]="SetCheckpointInsideCylinderHeightScale",
 	["SetCloudHatTransition"]="LoadCloudHat",
@@ -708,7 +689,6 @@ local OldNames =
 	["SetPedRagdollBlockingFlags"]="SetRagdollBlockingFlags",
 	["SetPedScaredWhenUsingScenario"]="ToggleScenarioPedCowerInPlace",
 	["SetPedShouldPlayDirectedScenarioExit"]="SetPedShouldPlayDirectedNormalScenarioExit",
-	["SetPedSteerBias"]="SetPedSteerBias",
 	["SetPedTalk"]="RequestTennisBanks",
 	["SetPedTargettableVehicleDestroy"]="SetVehicleIndividualDoorsLocked",
 	["SetPhoneLean"]="CellHorizontalModeToggle",
@@ -718,7 +698,6 @@ local OldNames =
 	["SetPlaneVtolDirection"]="SetVehicleFlightNozzlePositionImmediate",
 	["SetPlayerBlipPositionThisFrame"]="SetFakePausemapPlayerPositionThisFrame",
 	["SetPlayerInvertedUp"]="GetPlayerSwitchInterpOutDuration",
-	["SetPlayerIsInAnimalForm"]="SetPlayerIsInAnimalForm",
 	["SetPlayerResetFlagPreferRearSeats"]="SetPlayerPhonePaletteIdx",
 	["SetPtfxAssetNextCall"]="UseParticleFxAsset",
 	["SetRadarBigmapEnabled"]="SetBigmapActive",
@@ -768,7 +747,6 @@ local OldNames =
 	["SetVehiclePaintFade"]="SetVehicleEnveffScale",
 	["SetVehicleShadowEffect"]="DisableVehcileDynamicAmbientScales",
 	["SetVehicleSilent"]="SetVehicleInCarModShop",
-	["SetVehicleUsePlayerLightSettings"]="SetVehicleUsePlayerLightSettings",
 	["SetVerticalFlightPhase"]="SetVehicleFlightNozzlePositionImmediate",
 	["SetWarningMessage2"]="SetWarningMessageWithHeader",
 	["SetWarningMessageListRow"]="SetWarningMessageOptionItems",
@@ -815,8 +793,6 @@ local OldNames =
 	["SwitchToInputMappingScheme2"]="SwitchPcScriptedControls",
 	["TaskMoveNetwork"]="TaskMoveNetworkByName",
 	["TaskMoveNetworkAdvanced"]="TaskMoveNetworkAdvancedByName",
-	["TaskStopPhoneGestureAnimation"]="TaskStopPhoneGestureAnimation",
-	["TaskVehicleFollow"]="TaskVehicleFollow",
 	["ThefeedAddTxdRef"]="ThefeedUpdateItemTexture",
 	["ThefeedClearAnimpostfx"]="ThefeedResetAllParameters",
 	["ThefeedCommentTeleportPoolOff"]="ThefeedAutoPostGametipsOff",
@@ -5569,16 +5545,39 @@ _G2.Natives_PascalCase = setmetatable
 		__index=function(Self,Key)
 			local NewName = OldNames[Key]
 			if NewName then
-                local Value = Self[NewName]
+				local Value = Self[NewName]
 				Self[Key] = Value
 				do
-					local _, ErrorString = pcall(error,('Native "%s" is now known as "%s".'):format(Key,NewName),5) -- 4 levels up + this 1
-					ErrorString = ErrorString:split("//")
-					ErrorString = ErrorString[#ErrorString]
-					print(("[Heads Up!] - %s"):format(ErrorString))
+					local ErrorSource
+					do
+						local DebugInfoArray, DebugInfoCount = {}, 1
+						local debug_getinfo = debug.getinfo
+						local DebugInfo
+						repeat
+							DebugInfoCount = DebugInfoCount + 1
+							DebugInfo = debug_getinfo(DebugInfoCount)
+							DebugInfoArray[DebugInfoCount] = DebugInfo
+						until DebugInfo == nil or DebugInfo.what == "main"
+						if DebugInfo and DebugInfo.what == "main" then
+							ErrorSource = DebugInfo
+						else
+							for Index=2,DebugInfoCount do
+								DebugInfo = DebugInfoArray[Index]
+								if DebugInfo.currentline ~= -1 and not DebugInfo.short_src:startsWith "[string " then
+									ErrorSource = DebugInfo
+									break
+								end
+							end
+						end
+					end
+					if ErrorSource then
+						print(('[Heads Up - Native]\n	"%s" is now known as "%s".\n	%s:%s'):format(Key, NewName, ErrorSource.short_src, ErrorSource.currentline))
+					else
+						print(('[Heads Up - Native]\n	"%s" is now known as "%s".\n	No additional information is available.'):format(Key, NewName))
+					end
 				end
 				return Value
-            end
+			end
 		end
 	}
 )
