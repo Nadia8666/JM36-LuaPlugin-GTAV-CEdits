@@ -1,46 +1,32 @@
 --[[
-local Example Example = {
-	init			=	function()
-							Example.Keys		= require("Keys")
-							Example.Menu		= require("GUI")
-							Example.Menu.Open	= false
-							
-							--Example.Menu.addButton(ButtonName, Function, (nil or Table of Function Arguments), xPosMin, xPosMax, yPosmin, yPosMax)
-							--Example.Menu.addButton("Hello World", SaySomething, {}, 0.0, 0.2, 0.05, 0.05)
-							
-							Example.Menu.addButton("Hello World1", Example.SaySomethingA, 0.0, 0.2, 0.05, 0.05)
-							Example.Menu.addButton("Hello World2", Example.SaySomethingA, nil, 0.0, 0.2, 0.05, 0.05)
-							Example.Menu.addButton("Hello World3", Example.SaySomethingA, {}, 0.0, 0.2, 0.05, 0.05)
-							Example.Menu.addButton("Hello World4", Example.SaySomethingA, {"Hi", "World", "!"}, 0.0, 0.2, 0.05, 0.05)
-						end,
-	loop			=	function(Info)
-							if IsKeyPressed(Example.Keys.Z) or IsKeyPressed(90) or IsControlPressed(0, 20) then
-								Example.Menu.Open = not Example.Menu.Open
-							end
-							
-							if Example.Menu.Open then
-								Example.Menu.tick()
-							end
-						end,
-	stop			=	function()
-							unrequire("Keys")
-							unrequire("GUI")
-						end,
-	SaySomethingA	=	function(args)
-							if args then
-								if type(args)=="table" then
-									if #args ~= 0 then
-										for i=1, #args do
-											print(args[i].."3")
-										end
-									else
-										print("Hello World!2")
-									end
-								end
-							else
-								print("Hello World!1")
-							end
-						end,
+local Menu = require("GUI") -- create menu
+local MenuIsOpened = false -- set menu open to false
+
+local function ExampleFunction(ExampleParam)
+    print("Hello World!", ExampleParam)
+end
+
+Menu.addButton("First Button", ExampleFunction, "ExampleParam1", 0.0, 0.2, 0.05, 0.05)
+Menu.addButton("Second Button", ExampleFunction, "ExampleParam2", 0.0, 0.2, 0.05, 0.05)
+Menu.addButton("Third Button", ExampleFunction, {}, 0.0, 0.2, 0.05, 0.05)
+Menu.addButton("Fourth Button", ExampleFunction, nil, 0.0, 0.2, 0.05, 0.05)
+
+JM36.CreateThread(function()
+    while true do
+        if IsControlJustPressed(0, 20) then -- if DPAD_Down (Controller) or Z (QWERTY) was just pressed then
+            MenuIsOpened = not MenuIsOpened -- Invert menu open/display state boolean
+        end
+        
+        if MenuIsOpened then
+            Menu.tick() -- Displays this particular menu lib's menu
+        end
+        JM36.Wait() -- Wait so we don't endless while true do loop crash ourselves (or well the game)
+    end
+end)
+
+return{
+    stop    =   function()
+                    unrequire("GUI") -- destroy menu
+                end,
 }
-return Example
 ]]
