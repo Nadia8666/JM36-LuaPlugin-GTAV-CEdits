@@ -6,7 +6,7 @@ Scripts_Path	= "scripts\\ScriptsDir-Lua\\" or "C:\\Path\\To\\ScriptsDir-Lua\\"
 
 -- Script/Code Area
 --[[ Define JM36 LP Version ]]
-JM36_GTAV_LuaPlugin_Version=20220817.0
+JM36_GTAV_LuaPlugin_Version=20221130.0
 
 
 
@@ -478,7 +478,7 @@ tick = coroutine_wrap(function()
 				local j = 1
 				for i = 1, #Threads_HighPriority do
 					local Thread = Threads_HighPriority[i]
-					if coroutine_status(Thread)~="dead" then
+					if Thread and coroutine_status(Thread)~="dead" then
 						do
 							local Successful, Error = coroutine_resume(Thread)
 							if not Successful then print(Error) end
@@ -502,7 +502,7 @@ tick = coroutine_wrap(function()
 			local j = 1
 			for i = 1, ThreadsNum do
 				local Thread = Threads[i]
-				if coroutine_status(Thread)~="dead" then
+				if Thread and coroutine_status(Thread)~="dead" then
 					do
 						local Successful, Error = coroutine_resume(Thread)
 						if not Successful then print(Error) end
@@ -520,3 +520,6 @@ tick = coroutine_wrap(function()
 		coroutine_yield()
 	end
 end)
+
+--[[ Create unload "handler" function for lp ]]
+unload = Scripts_Stop
