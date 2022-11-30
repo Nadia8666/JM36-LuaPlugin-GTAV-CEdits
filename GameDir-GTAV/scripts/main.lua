@@ -36,7 +36,6 @@ local collectgarbage = collectgarbage
 
 
 
-
 --[[ Create secondary "global" table for storing tables containing "global" functions, such as natives. ]]
 do
 	local _G2 = setmetatable
@@ -367,84 +366,6 @@ do
 			print(__lib)
 		end
 	end
-end
-
---[[ Compatability with existing LuaPlugin scripts ]]
-Keys = require("Keys")
-do
-	local loaded = package.loaded
-	Libs = setmetatable({},{
-		__mode		=	"kv",
-		__index		=	function(Self, Key)
-							local Value = loaded[Key] or require(Key)
-							Self[Key] = Value
-							return Value
-						end,
-	})
-end
-if not DisableMigrator then
---	do
---		local DirectoryExists, ReturnValue = pcall(lfs_dir, "scripts")
---		local inspect = require'inspect'
---		print(inspect(DirectoryExists), inspect(ReturnValue))
---	end
-	
-	local io_popen, string_find, os_execute = io.popen, string.find, os.execute
-	local ExecTail = " > nul 2> nul"
-	--print("Migration commencing.")
-	local Scripts_Path, Script_Modules = Scripts_Path, Script_Modules
-	do
-		local string_gsub = string.gsub
-		Scripts_Path, Script_Modules = string_gsub(Scripts_Path, "//", "\\"), string_gsub(Script_Modules, "//", "\\")
-		Scripts_Path, Script_Modules = string_gsub(Scripts_Path, "\\\\", "\\"), string_gsub(Script_Modules, "\\\\", "\\")
-	end
-	local Scripts_Dir = io_popen("dir scripts /w")
-	local _Scripts_Dir = Scripts_Dir:read("*a")
-	Scripts_Dir:close()
-	if string_find(_Scripts_Dir, "addins") then
-		os_execute("del scripts\\addins\\basemodule.lua"..ExecTail)
-		os_execute("del scripts\\addins\\exampleGUI.lua"..ExecTail)
-		os_execute("robocopy scripts\\addins "..Script_Modules.." /mt /s /move"..ExecTail)
-		os_execute("rd scripts\\addins /s /q"..ExecTail)
-		print('Migrated "scripts\\addins" to "'..Script_Modules..'".')
-	end
-	if string_find(_Scripts_Dir, "libs") then
-		os_execute("del scripts\\libs\\GUI.lua"..ExecTail)
-		os_execute("robocopy scripts\\libs "..Script_Libs.." /mt /s /move"..ExecTail)
-		os_execute("rd scripts\\libs /s /q"..ExecTail)
-		print('Migrated "scripts\\libs" to "'..Script_Libs..'".')
-	end
-	if string_find(_Scripts_Dir, "keys.lua") then
-		os_execute("del scripts\\keys.lua"..ExecTail)
-		print('Removed (legacy) "scripts\\keys.lua"')
-	end
-	if string_find(_Scripts_Dir, "utils.lua") then
-		os_execute("del scripts\\utils.lua"..ExecTail)
-		print('Removed (legacy) "scripts\\utils.lua"')
-	end
-	--print("Migration concluded.")
-end
---[[ Compatability with existing JM36 Lua Plugin scripts ]]
-if not DisableMigrator then
-	local io_popen, string_find, os_execute = io.popen, string.find, os.execute
-	local ExecTail = " > nul 2> nul"
-	--print("Migration commencing.")
-	local Scripts_Path, Script_Modules = Scripts_Path, Script_Modules
-	do
-		local string_gsub = string.gsub
-		Scripts_Path, Script_Modules = string_gsub(Scripts_Path, "//", "\\"), string_gsub(Script_Modules, "//", "\\")
-		Scripts_Path, Script_Modules = string_gsub(Scripts_Path, "\\\\", "\\"), string_gsub(Script_Modules, "\\\\", "\\")
-	end
-	local Scripts_Dir = io_popen('dir "'..Scripts_Path..'" /w')
-	local _Scripts_Dir = Scripts_Dir:read("*a")
-	Scripts_Dir:close()
-	if string_find(_Scripts_Dir, ".lua") then
-		os_execute('robocopy "'..Scripts_Path..'\\" "'..Script_Modules..'\\" "*.lua" /mt /move'..ExecTail)
-		--os_execute('DEL /Q /F "'..Scripts_Path..'*.lua"'..ExecTail)
-		--print('Migrated '..Scripts_Path..' to "'..Script_Modules..'".')
-		--print('Legacy JM36 LP Scripts Migrated.')
-	end
-	--print("Migration concluded.")
 end
 
 

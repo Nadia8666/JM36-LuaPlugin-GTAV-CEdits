@@ -1,5 +1,4 @@
-local Keys =
-{
+return{
 	None				= 0,
 	LButton				= 1,
 	RButton				= 2,
@@ -178,4 +177,3 @@ local Keys =
 	Alt					= 262144,
 	Modifiers			= -65536,
 }
-return Keys
