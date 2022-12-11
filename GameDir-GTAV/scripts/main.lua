@@ -164,7 +164,7 @@ do
 		local line = nil
 		for i,v in ipairs(lines) do
 			if string.find(v, text) then
-				Line = i
+				line = i
 			end
 		end
 	 
