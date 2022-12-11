@@ -144,8 +144,13 @@ do
 		fileContent[Line] = Data
 	
 		local fileWriteable = assert(io.open(filePath, "w+"))
+		local filelength = #fileContent
 		for i,v in ipairs(fileContent) do
-			fileWriteable:write(v.. "\n")
+			if i == filelength then
+				fileWriteable:write(v) -- No newlines at end of config file (every write would increase the length)
+			else
+				fileWriteable:write(v.. "\n")
+			end
 		end
 	
 		fileWriteable:close()
