@@ -1,6 +1,8 @@
+-- Updated: 12/11/2022
+
 -- Config Area
-DebugMode		= false
-Scripts_Path	= "scripts\\ScriptsDir-Lua\\" or "C:\\Path\\To\\ScriptsDir-Lua\\"
+DebugMode = false
+Scripts_Path = "scripts\\ScriptsDir-Lua\\" or "C:\\Path\\To\\ScriptsDir-Lua\\"
 
 
 
@@ -121,11 +123,52 @@ do
 	do
 		local tostring = tostring
 		function configFileWrite(configFile, config, sep) -- Write simple config file
-			local configFile, sep = io_open(Scripts_Path..configFile, "w"), sep or "="
+			local configFile, sep = assert(io_open(Scripts_Path..configFile, "w"), "Invalid File Path"), sep or "="
 			for k,v in pairs(config) do
 				configFile:write(("%s%s%s\n"):format(k, sep, tostring(v)))
 			end
+			configFile:close() -- Speed improvements
 		end
+	end
+
+	function configFileWriteLine(File, Line, Data)
+		local filePath = Scripts_Path.. File
+		local fileReadOnly = assert(io.open(filePath, "r"), "Invalid File Path")
+	
+		local fileContent = {}
+		for line in fileReadOnly:lines() do
+			table_insert(fileContent, line)
+		end
+		fileReadOnly:close()
+	
+		fileContent[Line] = Data
+	
+		local fileWriteable = assert(io.open(filePath, "w+"))
+		for i,v in ipairs(fileContent) do
+			fileWriteable:write(v.. "\n")
+		end
+	
+		fileWriteable:close()
+	end
+
+	function configFileFindLineFromText(file, text)
+		local filePath = Scripts_Path.. file
+		local configFile = assert(io.open(filePath, "r"), "Invalid File Path")
+	 
+		local lines = {}
+		for L in configFile:lines() do
+			-- Loop through every line
+			table.insert(lines, L)
+		end
+		configFile:close()
+		local line = nil
+		for i,v in ipairs(lines) do
+			if string.find(v, text) then
+				Line = i
+			end
+		end
+	 
+		return line -- Either returns nil if line wasnt found or returns the line said text was found on
 	end
 end
 
