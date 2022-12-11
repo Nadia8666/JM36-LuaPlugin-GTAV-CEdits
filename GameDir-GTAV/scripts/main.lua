@@ -1,8 +1,6 @@
--- Updated: 12/11/2022
-
 -- Config Area
-DebugMode = false
-Scripts_Path = "scripts\\ScriptsDir-Lua\\" or "C:\\Path\\To\\ScriptsDir-Lua\\"
+DebugMode       = false
+Scripts_Path    = "scripts\\ScriptsDir-Lua\\" or "C:\\Path\\To\\ScriptsDir-Lua\\"
 
 
 
@@ -17,6 +15,9 @@ local _G = _G
 local Scripts_Path = Scripts_Path
 local setmetatable = setmetatable
 local pairs = pairs
+local assert = assert
+local tostring = tostring
+local ipairs = ipairs
 local coroutine = coroutine
 local coroutine_yield = coroutine.yield
 local coroutine_create = coroutine.create
@@ -120,20 +121,17 @@ do
 		return config
 	end
 	
-	do
-		local tostring = tostring
-		function configFileWrite(configFile, config, sep) -- Write simple config file
-			local configFile, sep = assert(io_open(Scripts_Path..configFile, "w"), "Invalid File Path"), sep or "="
-			for k,v in pairs(config) do
-				configFile:write(("%s%s%s\n"):format(k, sep, tostring(v)))
-			end
-			configFile:close() -- Speed improvements
+	function configFileWrite(configFile, config, sep) -- Write simple config file
+		local configFile, sep = assert(io_open(Scripts_Path..configFile, "w"), "Invalid File Path"), sep or "="
+		for k,v in pairs(config) do
+			configFile:write(("%s%s%s\n"):format(k, sep, tostring(v)))
 		end
+		configFile:close()
 	end
 
 	function configFileWriteLine(File, Line, Data)
 		local filePath = Scripts_Path.. File
-		local fileReadOnly = assert(io.open(filePath, "r"), "Invalid File Path")
+		local fileReadOnly = assert(io_open(filePath, "r"), "Invalid File Path")
 	
 		local fileContent = {}
 		for line in fileReadOnly:lines() do
@@ -143,14 +141,10 @@ do
 	
 		fileContent[Line] = Data
 	
-		local fileWriteable = assert(io.open(filePath, "w+"))
+		local fileWriteable = assert(io_open(filePath, "w+"))
 		local filelength = #fileContent
 		for i,v in ipairs(fileContent) do
-			if i == filelength then
-				fileWriteable:write(v) -- No newlines at end of config file (every write would increase the length)
-			else
-				fileWriteable:write(v.. "\n")
-			end
+			fileWriteable:write(v..(i ~= filelength and "\n" or "")) -- No newlines at end of config file (every write would increase the length)
 		end
 	
 		fileWriteable:close()
@@ -158,18 +152,18 @@ do
 
 	function configFileFindLineFromText(file, text)
 		local filePath = Scripts_Path.. file
-		local configFile = assert(io.open(filePath, "r"), "Invalid File Path")
+		local configFile = assert(io_open(filePath, "r"), "Invalid File Path")
 	 
 		local lines = {}
 		for L in configFile:lines() do
 			-- Loop through every line
-			table.insert(lines, L)
+			table_insert(lines, L)
 		end
 		configFile:close()
-		local line = nil
+		local line
 		for i,v in ipairs(lines) do
-			if string.find(v, text) then
-				line = i
+			if v:find(text) then -- shouldn't we do a string comparison (v == text) here instead for an exactly known string?
+				line = i -- shouldn't we break after here and return the first matchng line found rather than the last?
 			end
 		end
 	 
