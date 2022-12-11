@@ -104,7 +104,7 @@ _G.unrequire = unrequire
 do
 	function configFileRead(file,sep) -- Read simple config file
 		file = Scripts_Path..file;sep = sep or "="
-		local configFile = io_open(file);local config = {}
+		local configFile = assert(io_open(file), "Invalid File Path");local config = {}
 		if configFile then
 			for line in io_lines(file) do
 				if not (line:startsWith("[") and line:endsWith("]")) then
