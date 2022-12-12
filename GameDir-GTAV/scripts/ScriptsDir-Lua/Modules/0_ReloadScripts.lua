@@ -1,4 +1,3 @@
-local Config = configFileRead("MainConfig.ini")
 if not ScriptsReloadTriggerLoaded then ScriptsReloadTriggerLoaded = true
 	JM36.CreateThread_HighPriority(function()
 		local Scripts_Init, print = Scripts_Init, print
