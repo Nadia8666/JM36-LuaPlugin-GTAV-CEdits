@@ -1,0 +1,27 @@
+{
+    "Lua.diagnostics.globals": [
+        "JM36",
+        "IsControlJustPressed",
+        "configFileRead",
+        "DisplayOnscreenKeyboard",
+        "UpdateOnscreenKeyboard",
+        "GetOnscreenKeyboardResult",
+        "RegisterPedheadshot",
+        "IsPedheadshotReady",
+        "Info",
+        "IsPedheadshotValid",
+        "GetPedheadshotTxdString",
+        "AddTextComponentSubstringPlayerName",
+        "BeginTextCommandThefeedPost",
+        "EndTextCommandThefeedPostMessagetext",
+        "SetVehicleNumberPlateText",
+        "unrequire",
+        "CellCamActivateSelfieMode",
+        "EndTextCommandThefeedPostTicker",
+        "UnregisterPedheadshot",
+        "SetVehicleFixed",
+        "configFileWrite",
+        "configFileFindLineFromText",
+        "configFileWriteLine"
+    ]
+}
