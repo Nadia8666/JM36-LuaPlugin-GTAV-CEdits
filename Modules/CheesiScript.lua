@@ -182,6 +182,7 @@ Menu.addButton(TitleString, ChangeLac, {"TextPrompt", nil}, .01, .23, 0.03, 0.03
 Menu.addButton("fix car", function()
     --SetVehicleDamage(Info.Player.Vehicle.Id, 0 --[[ number ]], 0 --[[ number ]], 0 --[[ number ]], 0 --[[ number ]], 20 --[[ number ]], true --[[ boolean ]])
     SetVehicleFixed(Info.Player.Vehicle.Id)
+    SetVehicleEngineHealth(Info.Player.Vehicle.Id, 1000)
 end,
  {"TextPrompt", nil}, .01, .23, 0.03, 0.03)
 
