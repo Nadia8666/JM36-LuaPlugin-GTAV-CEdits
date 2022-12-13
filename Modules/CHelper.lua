@@ -107,7 +107,7 @@ end
 
 ---comment
 ---@param WindowArguments table WindowType, WindowCallback
-function OpenNewWindow(WindowArguments)
+local function OpenNewWindow(WindowArguments)
     local Wtype = WindowArguments.WindowType
     local WTable = {
         ["TextPrompt"] = function ()
@@ -263,7 +263,7 @@ JM36.CreateThread(function ()
         local isplane = Info.Player.Vehicle.Type.Plane
         local isheli = Info.Player.Vehicle.Type.Heli
 
-        function ChangePlate()
+        local function ChangePlate()
             local CurrentVehicle = Info.Player.Vehicle.Id
             SetVehicleNumberPlateText(CurrentVehicle, Cartext)
         end
