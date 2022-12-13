@@ -1,4 +1,4 @@
-print("InitCheesiScript")
+print("CHelper : Init")
 --[[/ 
 // you can do stuff like:
 // local print = print
@@ -37,7 +37,7 @@ local Menu = require("GUI")
 local GenPlate = require("GenPlate")
 local MenuOpen = false
 
-function KeyboardInput(TextEntry, ExampleText, MaxStringLength, CallbackFunction, CustomMessage)
+local function KeyboardInput(TextEntry, ExampleText, MaxStringLength, CallbackFunction, CustomMessage)
 
 	-- TextEntry		-->	The Text above the typing field in the black square
 	-- ExampleText		-->	An Example Text, what it should say in the typing field
@@ -72,7 +72,7 @@ function KeyboardInput(TextEntry, ExampleText, MaxStringLength, CallbackFunction
             AddTextComponentSubstringPlayerName(CustomMessage.String)
             --[[
             Title = "Saving Data",
-            Subtitle = "*CheesiScript*",
+            Subtitle = "*CHelper*",
             String = "",
             ]]
             -- Set the notification icon, title and subtitle.
@@ -125,9 +125,9 @@ Menu.addButton("Change Plate Text", OpenNewWindow,
            --/ Get old config
            local CurrentConfig = "LicenseText=".. SaveData
            --/ save new plate info
-           local SaveLine = Abbs.ConfFile.GetLine("Configs\\CheesiScript.ini", "LicenseText=")
+           local SaveLine = Abbs.ConfFile.GetLine("Configs\\CHelper.ini", "LicenseText=")
    
-           if SaveLine then Abbs.ConfFile.WriteLine("Configs\\CheesiScript.ini", SaveLine, CurrentConfig) end
+           if SaveLine then Abbs.ConfFile.WriteLine("Configs\\CHelper.ini", SaveLine, CurrentConfig) end
         end)
     end,
     TextStats = {
@@ -137,13 +137,13 @@ Menu.addButton("Change Plate Text", OpenNewWindow,
     },
     CustomMessage = {
         Title = "Saving Data",
-        Subtitle = "*CheesiScript*",
+        Subtitle = "*CHelper*",
         String = "Saving license plate data...",
     },
 },
 .01, .23, 0.03, 0.03)
 
-local Config = Abbs.ConfFile.Read("Configs\\CheesiScript.ini")
+local Config = Abbs.ConfFile.Read("Configs\\CHelper.ini")
 local AutoChagnerEnabled = Config.AutoChangeLicense 
 local TitleString = "err"
 if AutoChagnerEnabled == "0" then
@@ -153,24 +153,24 @@ elseif AutoChagnerEnabled == "1" then
 end
 
 local LACDB = false
-function ChangeLac()
+local function ChangeLac()
     if LACDB then return end
     JM36.CreateThread(function ()
         print("Running Instance", LACDB)
         if LACDB == true then return end
         LACDB = true
        
-        local Config = Abbs.ConfFile.Read("Configs\\CheesiScript.ini")
+        local Config = Abbs.ConfFile.Read("Configs\\CHelper.ini")
         print(Config.AutoChangeLicense)
-        local LicenseLine = Abbs.ConfFile.GetLine("Configs\\CheesiScript.ini", "AutoChangeLicense=")
+        local LicenseLine = Abbs.ConfFile.GetLine("Configs\\CHelper.ini", "AutoChangeLicense=")
         if Config.AutoChangeLicense == "1" then
             if LicenseLine then
-                Abbs.ConfFile.WriteLine("Configs\\CheesiScript.ini", LicenseLine, "AutoChangeLicense=0")
+                Abbs.ConfFile.WriteLine("Configs\\CHelper.ini", LicenseLine, "AutoChangeLicense=0")
                 SetVehicleNumberPlateText(Info.Player.Vehicle.Id, GenPlate.GenerateRandomPlate(8, 4))
             end
         elseif Config.AutoChangeLicense == "0" then
             if LicenseLine then
-                Abbs.ConfFile.WriteLine("Configs\\CheesiScript.ini", LicenseLine, "AutoChangeLicense=1")
+                Abbs.ConfFile.WriteLine("Configs\\CHelper.ini", LicenseLine, "AutoChangeLicense=1")
             end
         end
         JM36.yield(20)
@@ -200,7 +200,7 @@ JM36.CreateThread(function ()
     --StartNewScript("cellphone_controller", 31000)
     --/ Split up ui stepping and game stepping for easier code management
     local function SteppedUI()
-        local Config = Abbs.ConfFile.Read("Configs\\CheesiScript.ini")
+        local Config = Abbs.ConfFile.Read("Configs\\CHelper.ini")
         
         if MenuOpen then
             if Config.AutoChangeLicense == "0" then
@@ -246,7 +246,7 @@ JM36.CreateThread(function ()
        
         --print("Ped: ", Info.Player.Ped)
 
-        local Config = Abbs.ConfFile.Read("Configs\\CheesiScript.ini")
+        local Config = Abbs.ConfFile.Read("Configs\\CHelper.ini")
         local Cartext = Config.LicenseText or "TESTDEB"
 
         if Config.DebugFrames == "1" then
