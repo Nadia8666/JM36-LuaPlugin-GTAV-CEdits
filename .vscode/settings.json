@@ -23,5 +23,8 @@
         "configFileWrite",
         "configFileFindLineFromText",
         "configFileWriteLine"
-    ]
+    ],
+    "[lua]": {
+        "editor.defaultFormatter": "JohnnyMorganz.stylua"
+    },    
 }
