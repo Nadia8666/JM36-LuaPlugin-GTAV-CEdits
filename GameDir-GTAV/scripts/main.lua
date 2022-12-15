@@ -6,7 +6,7 @@ Scripts_Path    = "scripts\\ScriptsDir-Lua\\" or "C:\\Path\\To\\ScriptsDir-Lua\\
 
 -- Script/Code Area
 --[[ Define JM36 LP Version ]]
-JM36_GTAV_LuaPlugin_Version=20221130.0
+JM36_GTAV_LuaPlugin_Version=20221215.0
 
 
 
@@ -15,21 +15,13 @@ local _G = _G
 local Scripts_Path = Scripts_Path
 local setmetatable = setmetatable
 local pairs = pairs
-local assert = assert
-local tostring = tostring
-local ipairs = ipairs
 local coroutine = coroutine
 local coroutine_yield = coroutine.yield
 local coroutine_create = coroutine.create
 local coroutine_wrap = coroutine.wrap
 local coroutine_resume = coroutine.resume
 local coroutine_status = coroutine.status
-local table = table
-local table_insert = table.insert
 local table_sort = table.sort
-local io = io
-local io_open = io.open
-local io_lines = io.lines
 local lfs_dir = lfs.dir
 local print = print
 local type = type
@@ -102,102 +94,6 @@ do
 	end
 end
 _G.unrequire = unrequire
-do
-	function configFileRead(file,sep) -- Read simple config file
-		file = Scripts_Path..file;sep = sep or "="
-		local configFile = assert(io_open(file), "Invalid File Path");local config = {}
-		if configFile then
-			for line in io_lines(file) do
-				if not (line:startsWith("[") and line:endsWith("]")) then
-					line = line:gsub("\n","");line = line:gsub("\r","")
-					if line ~= "" then
-						line = line:split(sep)
-						config[line[1]] = line[2]
-					end
-				end
-			end
-			configFile:close()
-		end
-		return config
-	end
-	
-	function configFileWrite(configFile, config, sep) -- Write simple config file
-		local configFile, sep = assert(io_open(Scripts_Path..configFile, "w"), "Invalid File Path"), sep or "="
-		for k,v in pairs(config) do
-			configFile:write(("%s%s%s\n"):format(k, sep, tostring(v)))
-		end
-		configFile:close()
-	end
-
-	function configFileWriteLine(File, Line, Data)
-		local filePath = Scripts_Path.. File
-		local fileReadOnly = assert(io_open(filePath, "r"), "Invalid File Path")
-	
-		local fileContent = {}
-		for line in fileReadOnly:lines() do
-			table_insert(fileContent, line)
-		end
-		fileReadOnly:close()
-	
-		fileContent[Line] = Data
-	
-		local fileWriteable = assert(io_open(filePath, "w+"))
-		local filelength = #fileContent
-		for i,v in ipairs(fileContent) do
-			fileWriteable:write(v..(i ~= filelength and "\n" or "")) -- No newlines at end of config file (every write would increase the length)
-		end
-	
-		fileWriteable:close()
-	end
-
-	configFileFindLineFromText = setmetatable
-	(
-		{
-			["nil"]     =   function(configFile, text --[[, occurence]])
-								local RetVal
-								for line in configFile:lines() do
-									if line:find(text) then
-										RetVal = line
-									end
-								end
-								return RetVal
-							end,
-			["number"]  =   function(configFile, text, occurence)
-								local RetVal
-								local OccurenceCurrent = 0
-								for line in configFile:lines() do
-									if line:find(text) then
-										RetVal = line
-										OccurenceCurrent = OccurenceCurrent + 1;if OccurenceCurrent == occurence then break end
-									end
-								end
-								return RetVal, OccurenceCurrent ~= occurence and OccurenceCurrent -- Second return is truthy "failed"; second return will be "false" if we found and returned the requested occurence, otherwise will be the occurence number.
-							end,
-			["boolean"] =   function(configFile, text --[[, occurence]])
-								local RetVal = {}
-								local OccurenceCurrent = 0
-								for line in configFile:lines() do
-									if line:find(text) then
-										OccurenceCurrent = OccurenceCurrent + 1
-										RetVal[OccurenceCurrent] = line
-									end
-								end
-								return RetVal
-							end,
-		},
-		{
-			__index =   function(Self --[[, Key]])
-							return Self["nil"]
-						end,
-			__call  =   function(Self, file, text, occurence)
-							local configFile = assert(io_open(Scripts_Path.. file, "r"), "Invalid File Path")
-							local line, failed = Self[type(occurence)](configFile, text, occurence)
-							configFile:close()
-							return line, failed
-						end,
-		}
-	)
-end
 
 
 
@@ -242,10 +138,10 @@ _G.Info = Info
 local JM36 =
 {
 	CreateThread_HighPriority = function(func)
-			table_insert(Threads_HighPriority, coroutine_create(func))
+			Threads_HighPriority[#Threads_HighPriority+1] = coroutine_create(func)
 		end,
 	CreateThread = function(func)
-			table_insert(Threads_New, coroutine_create(func))
+			Threads_New[#Threads_New+1] = coroutine_create(func)
 		end,
 	Wait=0,
 	wait=0,
