@@ -14,12 +14,13 @@ https://docs.fivem.net/docs/game-references/controls/
 
 local Abbs = {
     ConfFile = {
-        Write = configFileWrite,
-        WriteLine = configFileWriteLine,
-        Read = configFileRead,
-        GetLine = configFileFindLineFromText,
+        Write = ConfigFile.WriteSimple,
+        WriteLine = ConfigFile.WriteLine,
+        Read = ConfigFile.ReadSimple,
+        GetLine = ConfigFile.configFileFindLineFromText,
     },
 }
+
 
 -- / customize depending on location
 local task = {}

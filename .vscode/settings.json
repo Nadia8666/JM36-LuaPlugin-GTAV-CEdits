@@ -22,9 +22,14 @@
         "SetVehicleFixed",
         "configFileWrite",
         "configFileFindLineFromText",
-        "configFileWriteLine"
+        "configFileWriteLine",
+        "Scripts_Path"
     ],
     "[lua]": {
         "editor.defaultFormatter": "JohnnyMorganz.stylua"
-    },    
+    },
+    "Lua.diagnostics.disable": [
+        "unbalanced-assignments"
+    ],
+    
 }
