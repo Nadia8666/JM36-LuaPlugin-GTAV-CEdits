@@ -57,33 +57,32 @@ configFileFindLineFromText = setmetatable
 (
 	{
 		["nil"]     =   function(configFile, text --[[, occurence]])
-							local RetVal
+							local RetVal, LineNum = 0, 0
 							for line in configFile:lines() do
+								LineNum = LineNum + 1
 								if line:find(text) then
-									RetVal = line
+									RetVal = LineNum
 								end
 							end
 							return RetVal
 						end,
 		["number"]  =   function(configFile, text, occurence)
-							local RetVal
-							local OccurenceCurrent = 0
+							local RetVal, LineNum, OccurenceCurrent = 0, 0, 0
 							for line in configFile:lines() do
+								LineNum = LineNum + 1
 								if line:find(text) then
-									RetVal = line
+									RetVal = LineNum
 									OccurenceCurrent = OccurenceCurrent + 1;if OccurenceCurrent == occurence then break end
 								end
 							end
 							return RetVal, OccurenceCurrent ~= occurence and OccurenceCurrent -- Second return is truthy "failed"; second return will be "false" if we found and returned the requested occurence, otherwise will be the occurence number.
 						end,
 		["boolean"] =   function(configFile, text --[[, occurence]])
-							local RetVal = {}
-							local OccurenceCurrent = 0
+							local RetVal, LineNum = {}, 0
 							for line in configFile:lines() do
-								if line:find(text) then
-									OccurenceCurrent = OccurenceCurrent + 1
-									RetVal[OccurenceCurrent] = line
-								end
+								local RetValFnd = line:find(text)
+								LineNum = LineNum + 1
+								RetVal[LineNum] = RetValFnd ~= nil and RetValFnd
 							end
 							return RetVal
 						end,
