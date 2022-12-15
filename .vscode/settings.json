@@ -23,7 +23,8 @@
         "configFileWrite",
         "configFileFindLineFromText",
         "configFileWriteLine",
-        "Scripts_Path"
+        "Scripts_Path",
+        "SetVehicleEngineHealth"
     ],
     "[lua]": {
         "editor.defaultFormatter": "JohnnyMorganz.stylua"

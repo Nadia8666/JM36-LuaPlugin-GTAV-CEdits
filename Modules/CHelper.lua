@@ -17,7 +17,7 @@ local Abbs = {
         Write = ConfigFile.WriteSimple,
         WriteLine = ConfigFile.WriteLine,
         Read = ConfigFile.ReadSimple,
-        GetLine = ConfigFile.configFileFindLineFromText,
+        GetLine = ConfigFile.FindLineFromText,
     },
 }
 
@@ -126,7 +126,7 @@ Menu.addButton("Change Plate Text", OpenNewWindow,
            --/ Get old config
            local CurrentConfig = "LicenseText=".. SaveData
            --/ save new plate info
-           local SaveLine = Abbs.ConfFile.GetLine("Configs\\CHelper.ini", "LicenseText=")
+           local SaveLine, Fail = ConfigFile.FindLineFromText("Configs\\CHelper.ini", "LicenseText=")
    
            if SaveLine then Abbs.ConfFile.WriteLine("Configs\\CHelper.ini", SaveLine, CurrentConfig) end
         end)
@@ -163,7 +163,8 @@ local function ChangeLac()
        
         local Config = Abbs.ConfFile.Read("Configs\\CHelper.ini")
         print(Config.AutoChangeLicense)
-        local LicenseLine = Abbs.ConfFile.GetLine("Configs\\CHelper.ini", "AutoChangeLicense=")
+        local LicenseLine, Fail = ConfigFile.FindLineFromText("Configs\\CHelper.ini", "AutoChangeLicense=", 1)
+
         if Config.AutoChangeLicense == "1" then
             if LicenseLine then
                 Abbs.ConfFile.WriteLine("Configs\\CHelper.ini", LicenseLine, "AutoChangeLicense=0")
